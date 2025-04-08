@@ -1,0 +1,14 @@
+<div class="noteref">
+  <%- include('template_created_date.ejs') %>
+  <h5>
+    <%= title %>
+  </h5>
+  <% if (summary) { %>
+  <p class="summary">
+    <%= summary %>
+  </p>
+  <% } %>
+  <%- content %>
+  <%- include('template_metadata.ejs') %>
+  <%- include('template_keywords.ejs') %>
+</div>
