@@ -21,23 +21,30 @@ export const loadChildren = (domain: string): string[] => {
 export const validateAndShapePayload = (
   payload: any,
   spec: any,
-  path: string = ""
+  path: string = "",
+  options: { allowPartial?: boolean } = {}
 ): { valid: boolean; errors: string[]; shapedData: any } => {
   let errors: string[] = [];
   const shapedData: any = {};
+  const allowPartial = options.allowPartial ?? false;
 
   for (const key in spec) {
     const fieldSpec = spec[key];
     const fullPath = path ? `${path}.${key}` : key;
     const value = payload?.[key];
 
-    if (fieldSpec.required && (value === undefined || value === null)) {
+    const isValuePresent = value !== undefined && value !== null;
+
+    if (!allowPartial && fieldSpec.required && !isValuePresent) {
       errors.push(`${fullPath} is required`);
       continue;
     }
 
-    if (value === undefined) {
-      shapedData[key] = getDefaultForType(fieldSpec.type);
+    if (!isValuePresent) {
+      // In partial mode, skip assigning defaults for missing fields
+      if (!allowPartial) {
+        shapedData[key] = getDefaultForType(fieldSpec.type);
+      }
       continue;
     }
 
@@ -47,7 +54,12 @@ export const validateAndShapePayload = (
         continue;
       }
 
-      const nested = validateAndShapePayload(value, fieldSpec.schema || {}, fullPath);
+      const nested = validateAndShapePayload(
+        value,
+        fieldSpec.schema || {},
+        fullPath,
+        options
+      );
       errors.push(...nested.errors);
       shapedData[key] = nested.shapedData;
     } else if (fieldSpec.type === "array") {
@@ -62,7 +74,12 @@ export const validateAndShapePayload = (
         const itemPath = `${fullPath}[${i}]`;
 
         if (fieldSpec.schema?.type === "object") {
-          const nested = validateAndShapePayload(item, fieldSpec.schema.schema || {}, itemPath);
+          const nested = validateAndShapePayload(
+            item,
+            fieldSpec.schema.schema || {},
+            itemPath,
+            options
+          );
           errors.push(...nested.errors);
           shapedData[key].push(nested.shapedData);
         } else {
@@ -85,6 +102,7 @@ export const validateAndShapePayload = (
 
   return { valid: errors.length === 0, errors, shapedData };
 };
+
 
 const getDefaultForType = (type: string) => {
   switch (type) {

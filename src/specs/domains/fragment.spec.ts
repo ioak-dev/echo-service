@@ -31,6 +31,14 @@ export const fragmentSpec: SpecDefinition = {
             }
         }
     },
+    "test": {
+        "type": "array",
+        "required": true,
+        "schema": {
+            "type": "string",
+            "parent": "storythread"
+        }
+    },
     "colors": {
         "type": "array",
         "required": false,

@@ -253,6 +253,42 @@ export const updateOne = async (req: Request, res: Response) => {
     }
 };
 
+export const patchOne = async (req: Request, res: Response) => {
+    const { space, domain, reference } = req.params;
+
+    if (!isOperationAllowed(domain, "patch")) {
+        return res.status(404).json({ error: "Operation 'patch' is not supported for this domain" });
+    }
+
+    const userId = req.user?.user_id;
+
+    try {
+        const spec = loadSpec(domain);
+
+        // Validate only the fields present in the request
+        const result = validateAndShapePayload(req.body, spec, "", { allowPartial: true });
+        if (!result.valid) {
+            return res.status(400).json({ error: "Validation failed", details: result.errors });
+        }
+
+        if (!await checkParentReferences(result.shapedData, spec, space, res)) return;
+
+        const Model = getCollectionByName(space, domain);
+        const patchData = {
+            ...result.shapedData,
+            updatedAt: new Date(),
+            updatedBy: userId
+        };
+
+        const doc = await Model.findOneAndUpdate({ reference }, patchData, { new: true });
+        if (!doc) return res.status(404).json({ error: "Not found" });
+
+        res.json(fillMissingFields(doc.toObject(), spec));
+    } catch (err: any) {
+        res.status(500).json({ error: "Error patching document", details: err.message });
+    }
+};
+
 export const deleteOne = async (req: Request, res: Response) => {
     const { space, domain, reference } = req.params;
 

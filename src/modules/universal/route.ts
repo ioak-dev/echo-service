@@ -7,6 +7,7 @@ import {
   search,
   inferTypes,
   getByReference,
+  patchOne,
 } from "./service";
 import { authorizeApi } from "../../middlewares";
 
@@ -22,6 +23,7 @@ module.exports = function (router: any) {
     .route("/resources/:space/:domain/:reference")
     .get(authorizeApi, getByReference)
     .put(authorizeApi, updateOne)
+    .patch(authorizeApi, patchOne)
     .delete(authorizeApi, deleteOne);
 
   router.post("/resources/:space/:domain/search", authorizeApi, search);
