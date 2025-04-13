@@ -1,6 +1,6 @@
 import { SpecDefinition } from "../types/spec.types";
 
-const fragmentCommentSpec: SpecDefinition = {
+export const fragmentCommentSpec: SpecDefinition = {
     "fragmentId": {
         "type": "string",
         "required": true
@@ -22,5 +22,3 @@ const fragmentCommentSpec: SpecDefinition = {
         "required": false
     }
 }
-
-export default fragmentCommentSpec;

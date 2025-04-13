@@ -3,7 +3,7 @@ export type BaseType = "string" | "number" | "boolean" | "any";
 export interface BaseField {
   type: BaseType | "object" | "array";
   required?: boolean;
-  filter?: "like" | "in" | "gt" | "lt" | "gte" | "lte" | "exact";
+  parent?: string; // domain name of parent
 }
 
 // Object field — supports nested schema
@@ -19,12 +19,33 @@ export interface ArrayField extends BaseField {
 }
 
 // A single field can be base, object, or array
-export type FieldDefinition =
-  | BaseField
-  | ObjectField
-  | ArrayField;
+export type FieldDefinition = BaseField | ObjectField | ArrayField;
 
-// A domain spec is an object of fields
+// Domain-level metadata
+export interface SpecMeta {
+  children?: string[]; // child domain names
+}
+
+// A domain spec is a dictionary of fields + optional meta info
+export type SpecField =
+  | {
+    type: "string" | "number" | "boolean";
+    required?: boolean;
+    parent?: string;
+    filter?: any;
+  }
+  | {
+    type: "object";
+    required?: boolean;
+    schema: SpecDefinition;
+  }
+  | {
+    type: "array";
+    required?: boolean;
+    schema: SpecField;
+  }
+
+
 export type SpecDefinition = {
-  [fieldName: string]: FieldDefinition;
+  [field: string]: SpecField;
 };

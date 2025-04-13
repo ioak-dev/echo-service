@@ -1,6 +1,6 @@
 import { SpecDefinition } from "../types/spec.types";
 
-const storythreadSpec: SpecDefinition = {
+export const storythreadSpec: SpecDefinition = {
     "title": {
         "type": "string",
         "required": true
@@ -11,4 +11,4 @@ const storythreadSpec: SpecDefinition = {
     }
 }
 
-export default storythreadSpec;
+export const storythreadChildren: string[] = ["fragment"]

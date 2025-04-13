@@ -41,43 +41,43 @@ export const buildQueryFromFilters = (
 };
 
 export const buildQueryFromAdvancedFilters = (
-    filters: any,
-    spec: SpecDefinition
-  ): Record<string, any> => {
-    const mongoQuery: Record<string, any> = {};
-  
-    for (const field in filters) {
-      const value = filters[field];
-      const fieldSpec = spec[field];
-      if (!fieldSpec) continue;
-  
-      if (typeof value === "object" && !Array.isArray(value)) {
-        // Support operators like gte, lte, in
-        const operators: Record<string, string> = {
-          eq: "$eq",
-          ne: "$ne",
-          gt: "$gt",
-          gte: "$gte",
-          lt: "$lt",
-          lte: "$lte",
-          in: "$in",
-          nin: "$nin",
-          regex: "$regex"
-        };
-  
-        const mongoOps: Record<string, any> = {};
-  
-        for (const op in value) {
-          if (operators[op]) {
-            mongoOps[operators[op]] = value[op];
-          }
+  filters: any,
+  spec: SpecDefinition
+): Record<string, any> => {
+  const mongoQuery: Record<string, any> = {};
+
+  for (const field in filters) {
+    const value = filters[field];
+    const fieldSpec = spec[field];
+    if (!fieldSpec) continue;
+
+    if (typeof value === "object" && !Array.isArray(value)) {
+      // Support operators like gte, lte, in
+      const operators: Record<string, string> = {
+        eq: "$eq",
+        ne: "$ne",
+        gt: "$gt",
+        gte: "$gte",
+        lt: "$lt",
+        lte: "$lte",
+        in: "$in",
+        nin: "$nin",
+        regex: "$regex"
+      };
+
+      const mongoOps: Record<string, any> = {};
+
+      for (const op in value) {
+        if (operators[op]) {
+          mongoOps[operators[op]] = value[op];
         }
-  
-        mongoQuery[field] = mongoOps;
-      } else {
-        mongoQuery[field] = value;
       }
+
+      mongoQuery[field] = mongoOps;
+    } else {
+      mongoQuery[field] = value;
     }
-  
-    return mongoQuery;
-  };
+  }
+
+  return mongoQuery;
+};

@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { specsMap } from '../../specs/domains';
+import { childrenMap, specsMap } from '../../specs/domains';
 import { SpecDefinition } from "../../specs/types/spec.types";
+
 
 export const loadSpec = (domain: string): SpecDefinition => {
   const spec: SpecDefinition = specsMap[domain];
@@ -11,6 +12,10 @@ export const loadSpec = (domain: string): SpecDefinition => {
   }
 
   return spec;
+};
+
+export const loadChildren = (domain: string): string[] => {
+  return childrenMap[domain] || [];
 };
 
 export const validateAndShapePayload = (

@@ -1,6 +1,6 @@
 import { SpecDefinition } from "../types/spec.types";
 
-const userSpec: SpecDefinition = {
+export const userSpec: SpecDefinition = {
     "name": {
         "type": "string",
         "required": true
@@ -47,5 +47,3 @@ const userSpec: SpecDefinition = {
         }
     }
 }
-
-export default userSpec;

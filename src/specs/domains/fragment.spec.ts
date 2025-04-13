@@ -1,6 +1,6 @@
 import { SpecDefinition } from "../types/spec.types";
 
-const fragmentSpec: SpecDefinition = {
+export const fragmentSpec: SpecDefinition = {
     "name": {
         "type": "string",
         "required": true
@@ -9,18 +9,21 @@ const fragmentSpec: SpecDefinition = {
         "type": "string",
         "required": false
     },
-    "storythreadId": {
+    "storythreadReference": {
         "type": "string",
-        "required": true
+        "required": true,
+        "parent": "storythread"
     },
     "labels": {
         "type": "array",
-        "required": false,
+        "required": true,
         "schema": {
             "type": "object",
             "schema": {
                 "label": {
-                    "type": "string"
+                    "type": "string",
+                    "parent": "storythread",
+                    "required": true
                 },
                 "value": {
                     "type": "string"
@@ -37,4 +40,4 @@ const fragmentSpec: SpecDefinition = {
     }
 }
 
-export default fragmentSpec;
+export const fragmentChildren: string[] = ["fragmentComment", "fragmentVersion"];

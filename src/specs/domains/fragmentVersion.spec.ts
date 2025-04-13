@@ -1,6 +1,6 @@
 import { SpecDefinition } from "../types/spec.types";
 
-const fragmentVersionSpec: SpecDefinition = {
+export const fragmentVersionSpec: SpecDefinition = {
     "fragmentId": {
         "type": "string",
         "required": true
@@ -19,4 +19,3 @@ const fragmentVersionSpec: SpecDefinition = {
     }
 }
 
-export default fragmentVersionSpec;
