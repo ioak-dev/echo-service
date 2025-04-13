@@ -16,18 +16,6 @@ const gqlScalarSchema = require("./modules/gql-scalar");
 const assetSchema = require("./modules/asset");
 const sessionSchema = require("./modules/session");
 const userSchema = require("./modules/user");
-const articleSchema = require("./modules/article");
-const articleCommentSchema = require("./modules/article/comment");
-const articleCommentFeedbackSchema = require("./modules/article/comment/feedback");
-const articleFeedbackSchema = require("./modules/article/feedback");
-const articleCategorySchema = require("./modules/article/category");
-const articleTagSchema = require("./modules/article/tag");
-const postSchema = require("./modules/post");
-const postCommentSchema = require("./modules/post/comment");
-const postCommentFeedbackSchema = require("./modules/post/comment/feedback");
-const postFeedbackSchema = require("./modules/post/feedback");
-const postFollowerSchema = require("./modules/post/follower");
-const postTagSchema = require("./modules/post/tag");
 
 const databaseUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017";
 mongoose.connect(databaseUri, {
@@ -42,36 +30,12 @@ const server = new ApolloServer({
     assetSchema.typeDefs,
     sessionSchema.typeDefs,
     userSchema.typeDefs,
-    articleSchema.typeDefs,
-    articleCommentSchema.typeDefs,
-    articleCommentFeedbackSchema.typeDefs,
-    articleCategorySchema.typeDefs,
-    articleFeedbackSchema.typeDefs,
-    articleTagSchema.typeDefs,
-    postSchema.typeDefs,
-    postCommentSchema.typeDefs,
-    postCommentFeedbackSchema.typeDefs,
-    postFeedbackSchema.typeDefs,
-    postFollowerSchema.typeDefs,
-    postTagSchema.typeDefs,
   ],
   resolvers: [
     gqlScalarSchema.resolvers,
     assetSchema.resolvers,
     sessionSchema.resolvers,
     userSchema.resolvers,
-    articleSchema.resolvers,
-    articleCommentSchema.resolvers,
-    articleCommentFeedbackSchema.resolvers,
-    articleCategorySchema.resolvers,
-    articleFeedbackSchema.resolvers,
-    articleTagSchema.resolvers,
-    postSchema.resolvers,
-    postCommentSchema.resolvers,
-    postCommentFeedbackSchema.resolvers,
-    postFeedbackSchema.resolvers,
-    postFollowerSchema.resolvers,
-    postTagSchema.resolvers,
   ],
   context: ({ req, res }: any) => {
     const authString = req.headers.authorization || "";

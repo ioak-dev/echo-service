@@ -4,7 +4,6 @@ import { companyCollection, companySchema } from "./model";
 import { format } from "date-fns";
 import { getGlobalCollection, getCollection } from "../../lib/dbutils";
 import { create_sequence, nextval } from "../sequence/service";
-import * as StopwordsHelper from '../stopwords/helper';
 
 export const updateCompany = async (data: any, userId: string) => {
   const model = getGlobalCollection(companyCollection, companySchema);
@@ -24,10 +23,7 @@ export const updateCompany = async (data: any, userId: string) => {
     reference: await nextval("companyId"),
   });
 
-  await create_sequence("noteId", null, 1, response.reference);
-  await create_sequence("libraryId", null, 1, response.reference);
-
-  await StopwordsHelper.resetStopwords(response.reference);
+  await create_sequence("fragmentId", null, 1, response.reference);
 
   return response;
 };

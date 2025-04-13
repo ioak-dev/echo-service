@@ -3,6 +3,7 @@ const { merge } = require('webpack-merge');
 const nodeExternals = require('webpack-node-externals');
 const path = require('path');
 const webpack = require('webpack');
+const CopyPlugin = require("copy-webpack-plugin");
 
 const common = require('./webpack.common.js');
 
@@ -15,6 +16,15 @@ module.exports = merge(common, {
     }),
   ],
   mode: 'development',
-  plugins: [new CleanWebpackPlugin(), new webpack.HotModuleReplacementPlugin()],
+  plugins: [new CleanWebpackPlugin(), new webpack.HotModuleReplacementPlugin(),
+  new CopyPlugin({
+    patterns: [
+      {
+        from: path.resolve(__dirname, "./src/specs"),
+        to: path.resolve(__dirname, "./dist/specs"),
+      },
+    ],
+  }),
+  ],
   watch: true,
 });
