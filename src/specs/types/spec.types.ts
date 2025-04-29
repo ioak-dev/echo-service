@@ -1,51 +1,72 @@
 export type BaseType = "string" | "number" | "boolean" | "any";
 
+// Lifecycle hooks for a domain
+export interface SpecHooks {
+  beforeCreate?: (doc: any, context: HookContext) => Promise<any>;
+  beforeUpdate?: (doc: any, context: HookContext) => Promise<any>;
+  beforePatch?: (doc: any, context: HookContext) => Promise<any>;
+  afterCreate?: (doc: any, context: HookContext) => Promise<void>;
+  afterUpdate?: (doc: any, context: HookContext) => Promise<void>;
+  afterPatch?: (doc: any, context: HookContext) => Promise<void>;
+}
+
+// Optional metadata per domain
+export interface SpecMeta {
+  children?: string[]; // child domain names
+  hooks?: SpecHooks;
+}
+
+export interface HookContext {
+  space: string;
+  domain: string;
+  userId?: string;
+}
+
+// Base field type
 export interface BaseField {
   type: BaseType | "object" | "array";
   required?: boolean;
-  parent?: string; // domain name of parent
+  parent?: string;
 }
 
-// Object field — supports nested schema
+// Object field
 export interface ObjectField extends BaseField {
   type: "object";
   schema: SpecDefinition;
 }
 
-// Array field — supports either base types or object definitions
+// Array field — allows for both base types and objects
 export interface ArrayField extends BaseField {
   type: "array";
-  schema: FieldDefinition; // type of array elements
+  schema: SpecField;
 }
 
-// A single field can be base, object, or array
-export type FieldDefinition = BaseField | ObjectField | ArrayField;
-
-// Domain-level metadata
-export interface SpecMeta {
-  children?: string[]; // child domain names
-}
-
-// A domain spec is a dictionary of fields + optional meta info
+// Single field type — can be basic types or objects or arrays
 export type SpecField =
   | {
-    type: "string" | "number" | "boolean";
-    required?: boolean;
-    parent?: string;
-    filter?: any;
-  }
+      type: BaseType;
+      required?: boolean;
+      parent?: string;
+      filter?: any;
+    }
   | {
-    type: "object";
-    required?: boolean;
-    schema: SpecDefinition;
-  }
+      type: "object";
+      required?: boolean;
+      schema: SpecDefinition;
+    }
   | {
-    type: "array";
-    required?: boolean;
-    schema: SpecField;
-  }
+      type: "array";
+      required?: boolean;
+      schema: SpecField;  // Schema can be another field (array of objects or base types)
+    };
 
-
+// Full domain spec
 export type SpecDefinition = {
-  [field: string]: SpecField;
+  fields: {
+    [field: string]: SpecField;
+  };
+  meta?: {
+    hooks?: SpecHooks;
+    children?: string[];
+  };
 };

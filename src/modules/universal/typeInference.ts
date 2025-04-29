@@ -53,6 +53,12 @@ const generateNestedInterface = (
     const tsType = inferTsType(fieldDef, domainName, [...pathParts, field]);
     fields += `\n  ${field}${fieldDef.required ? "" : "?"}: ${tsType};`;
   }
+  fields += `\n  id: string;`;
+  fields += `\n  reference: string;`;
+  fields += `\n  createdBy: string;`;
+  fields += `\n  createdAt: string;`;
+  fields += `\n  updatedBy: string;`;
+  fields += `\n  updatedAt: string;`;
 
   return `export interface ${interfaceName} {${fields}\n}`;
 };
@@ -64,7 +70,7 @@ export const generateTypes = (space: string): string => {
     const spec = specsMap[specName];
 
     const domainInterfaceName = capitalize(specName);
-    const mainInterface = generateNestedInterface(domainInterfaceName, spec, specName);
+    const mainInterface = generateNestedInterface(domainInterfaceName, spec.fields, specName);
     types.push(mainInterface);
   });
 

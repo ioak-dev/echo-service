@@ -1,51 +1,51 @@
 import { SpecDefinition } from "../types/spec.types";
 
-export const fragmentSpec: SpecDefinition = {
-    "name": {
-        "type": "string",
-        "required": true
+// Define label object schema
+const labelSchema: SpecDefinition = {
+  fields: {
+    label: {
+      type: "string",
+      required: true,
     },
-    "latestContent": {
-        "type": "string",
-        "required": false
+    value: {
+      type: "string",
+      required: false,
+    }
+  }
+};
+
+export const fragmentSpec: SpecDefinition = {
+  fields: {
+    "name": {
+      type: "string",
+      required: true
+    },
+    "content": {
+      type: "string",
+      required: false
     },
     "storythreadReference": {
-        "type": "string",
-        "required": true,
-        "parent": "storythread"
+      type: "string",
+      required: true,
+      parent: "storythread"
     },
     "labels": {
-        "type": "array",
-        "required": true,
-        "schema": {
-            "type": "object",
-            "schema": {
-                "label": {
-                    "type": "string",
-                    "parent": "storythread",
-                    "required": true
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        }
-    },
-    "test": {
-        "type": "array",
-        "required": true,
-        "schema": {
-            "type": "string",
-            "parent": "storythread"
-        }
-    },
-    "colors": {
-        "type": "array",
-        "required": false,
-        "schema": {
-            "type": "number"
-        }
+      type: "array",  // This is an array field
+      required: true,
+      schema: {
+        type: "object",  // Inside the array, each item is an object
+        schema: labelSchema,  // Reusing the label schema here
+      }
     }
-}
+  },
+  meta: {
+    hooks: {
+      beforeCreate: async (doc, context) => {
+        // Example of beforeCreate hook logic
+        return doc;
+      }
+    }
+  }
+};
 
 export const fragmentChildren: string[] = ["fragmentComment", "fragmentVersion"];

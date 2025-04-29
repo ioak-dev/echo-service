@@ -15,18 +15,18 @@ const router = express.Router();
 
 module.exports = function (router: any) {
   router
-    .route("/resources/:space/:domain")
+    .route("/resources-dep/:space/:domain")
     .get(authorizeApi, getAll)
     .post(authorizeApi, createOne);
 
   router
-    .route("/resources/:space/:domain/:reference")
+    .route("/resources-dep/:space/:domain/:reference")
     .get(authorizeApi, getByReference)
     .put(authorizeApi, updateOne)
     .patch(authorizeApi, patchOne)
     .delete(authorizeApi, deleteOne);
 
-  router.post("/resources/:space/:domain/search", authorizeApi, search);
+  router.post("/resources-dep/:space/:domain/search", authorizeApi, search);
 
-  router.get("/inference/resources", inferTypes);
+  router.get("/inference/resources-dep", inferTypes);
 }

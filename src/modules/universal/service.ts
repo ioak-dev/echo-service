@@ -25,10 +25,8 @@ const checkParentReferences = async (
     res: Response,
     path = ""
 ): Promise<boolean> => {
-    for (const fieldName in spec) {
-        if (fieldName === "_meta") continue;
-
-        const fieldSpec = spec[fieldName];
+    for (const fieldName in spec.fields) {
+        const fieldSpec = spec.fields[fieldName];
         const value = shapedData?.[fieldName];
         const fullPath = path ? `${path}.${fieldName}` : fieldName;
 
@@ -137,6 +135,11 @@ export const getAll = async (req: Request, res: Response) => {
 
 export const search = async (req: Request, res: Response) => {
     const { space, domain } = req.params;
+
+    if (!isOperationAllowed(domain, "search")) {
+        return res.status(404).json({ error: "Operation 'search' is not supported for this domain" });
+    }
+
     const { filters = {}, pagination = {} } = req.body;
     const { page = 1, limit = 10 } = pagination;
 
@@ -201,7 +204,10 @@ export const createOne = async (req: Request, res: Response) => {
         if (!result.valid) return res.status(400).json({ error: "Validation failed", details: result.errors });
 
         if (!await checkParentReferences(result.shapedData, spec, space, res)) return;
-
+        const hooks = spec.meta?.hooks;
+        if (hooks?.beforeCreate) {
+            result.shapedData = await hooks.beforeCreate(result.shapedData, { space, domain, userId });
+        }
         const Model = getCollectionByName(space, domain);
         const timestamp = new Date();
 
@@ -216,6 +222,10 @@ export const createOne = async (req: Request, res: Response) => {
 
         await doc.save();
         res.status(201).json(fillMissingFields(doc.toObject(), spec));
+        if (hooks?.afterCreate) {
+            hooks.afterCreate(doc.toObject(), { space, domain, userId }).catch(console.error);
+        }
+
     } catch (err: any) {
         res.status(500).json({ error: "Error creating document", details: err.message });
     }

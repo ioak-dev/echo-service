@@ -1,4 +1,5 @@
 import { SpecDefinition } from "../types/spec.types";
+import { courseSpec } from "./course.spec";
 import { fragmentChildren, fragmentSpec } from "./fragment.spec";
 import { fragmentCommentSpec } from "./fragmentComment.spec";
 import { fragmentVersionSpec } from "./fragmentVersion.spec";
@@ -10,7 +11,8 @@ export const specsMap: Record<string, SpecDefinition> = {
     fragment: fragmentSpec,
     fragmentComment: fragmentCommentSpec,
     fragmentVersion: fragmentVersionSpec,
-    storythread: storythreadSpec
+    storythread: storythreadSpec,
+    course: courseSpec
 };
 
 export const childrenMap: Record<string, string[]> = {

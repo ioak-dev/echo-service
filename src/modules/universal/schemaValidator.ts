@@ -20,7 +20,7 @@ export const loadChildren = (domain: string): string[] => {
 
 export const validateAndShapePayload = (
   payload: any,
-  spec: any,
+  spec: SpecDefinition,
   path: string = "",
   options: { allowPartial?: boolean } = {}
 ): { valid: boolean; errors: string[]; shapedData: any } => {
@@ -28,8 +28,8 @@ export const validateAndShapePayload = (
   const shapedData: any = {};
   const allowPartial = options.allowPartial ?? false;
 
-  for (const key in spec) {
-    const fieldSpec = spec[key];
+  for (const key in spec.fields) {
+    const fieldSpec = spec.fields[key];
     const fullPath = path ? `${path}.${key}` : key;
     const value = payload?.[key];
 
@@ -119,13 +119,13 @@ export const fillMissingFields = (
   doc: any,
   spec: SpecDefinition
 ): any => {
-  const shaped: any = { reference: doc.reference, createdBy: doc.createdBy, createdAt: doc.createdAt, updatedBy: doc.updatedBy, updatedAt: doc.updatedAt };
+  const shaped: any = { id: doc._id, reference: doc.reference, createdBy: doc.createdBy, createdAt: doc.createdAt, updatedBy: doc.updatedBy, updatedAt: doc.updatedAt };
 
-  for (const field in spec) {
+  for (const field in spec.fields) {
     if (doc.hasOwnProperty(field)) {
       shaped[field] = doc[field];
     } else {
-      shaped[field] = spec[field].type === "array" ? [] : null;
+      shaped[field] = spec.fields[field].type === "array" ? [] : null;
     }
   }
 
