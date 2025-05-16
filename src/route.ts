@@ -11,7 +11,6 @@ require("./modules/auth/route")(router);
 require("./modules/user/route")(router);
 require("./modules/user/invite/route")(router);
 require("./modules/company/route")(router);
-require("./modules/universal/route")(router);
 require("./modules/domain/api/route")(router);
 
 module.exports = router;

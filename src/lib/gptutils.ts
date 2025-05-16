@@ -19,7 +19,7 @@ export const predict = async (payload: any) => {
 
     if (response.status === 200) {
       console.log("GPT RESPONSE");
-      // console.log(response.data.data);
+      console.log(response.data.data);
       if (
         response.data?.data?.choices.length > 0 &&
         response.data?.data?.choices[0]?.message?.content

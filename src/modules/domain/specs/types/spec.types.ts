@@ -2,6 +2,7 @@ export interface HookContext {
   space: string;
   domain: string;
   operation: "create" | "update" | "patch" | "delete";
+  payload: any;
   userId?: string;
 }
 
@@ -19,6 +20,7 @@ export interface SpecHooks {
   afterUpdate?: (doc: any, context: HookContext) => Promise<void>;
   afterPatch?: (doc: any, context: HookContext) => Promise<void>;
   validate?: (doc: any, context: HookContext) => Promise<string[]>;
+  shapeResponse?: (doc: any, context: HookContext) => Promise<HookResponse>;
 }
 
 

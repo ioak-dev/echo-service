@@ -86,7 +86,7 @@ export const personProfileSpec: SpecDefinition = {
         itemType: 'object',
         displayOptions: {
           label: "Addresses",
-          type: "group-array"
+          type: "array"
         },
         fields: {
           street: {

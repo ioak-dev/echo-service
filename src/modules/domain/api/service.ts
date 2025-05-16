@@ -11,6 +11,22 @@ import { generateTypesFromSpecs } from "../utils/typeInference";
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
+async function applyShapeResponse(
+  doc: any,
+  spec: SpecDefinition,
+  context: any
+): Promise<any | null> {
+  const hooks = spec.meta?.hooks;
+  if (hooks?.shapeResponse) {
+    const result = await hooks.shapeResponse(doc, context);
+    if (result.errors.length > 0) {
+      throw new Error(`shapeResponse errors: ${result.errors.join(", ")}`);
+    }
+    return result.doc ?? null;
+  }
+  return doc;
+}
+
 
 export const checkParentReferences = async (
   shapedData: any,
@@ -165,10 +181,21 @@ export const search = async (req: Request, res: Response) => {
       .limit(limit);
 
     const total = await Model.countDocuments(mongoQuery);
-    const shaped = docs.map((doc: any) => fillMissingFields(doc.toObject(), spec));
+
+    const shapedPromises = docs.map(async (doc: any) => {
+      const filled = fillMissingFields(doc.toObject(), spec);
+      try {
+        return await applyShapeResponse(filled, spec, { space, domain, operation: "search" });
+      } catch (err) {
+        console.error("shapeResponse error:", err);
+        return null;
+      }
+    });
+
+    const shapedResults = (await Promise.all(shapedPromises)).filter(doc => doc !== null);
 
     res.json({
-      data: shaped,
+      data: shapedResults,
       total,
       page,
       limit,
@@ -190,7 +217,9 @@ export const getOne = async (req: Request, res: Response) => {
   const doc = await Model.findOne({ reference });
   if (!doc) return res.status(404).json({ error: "Not found" });
 
-  res.json(fillMissingFields(doc.toObject(), spec));
+  const filled = fillMissingFields(doc.toObject(), spec);
+  const shaped = await applyShapeResponse(filled, spec, { space, domain, operation: "getOne" });
+  res.json(shaped);
 };
 
 export const create = async (req: Request, res: Response) => {
@@ -209,7 +238,7 @@ export const create = async (req: Request, res: Response) => {
 
   const hooks = spec.meta?.hooks;
   if (hooks?.beforeCreate) {
-    let hookResponse = await hooks.beforeCreate(shapedDataOriginal, { space, domain, operation: "create", userId });
+    let hookResponse = await hooks.beforeCreate(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
     if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
     shapedData = hookResponse.doc;
   }
@@ -243,9 +272,20 @@ export const create = async (req: Request, res: Response) => {
   });
 
   await doc.save();
-  res.status(201).json(fillMissingFields(doc.toObject(), spec));
+
+  const shapedDoc = fillMissingFields(doc.toObject(), spec);
+  let shaped: any = null;
+  try {
+    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
+  } catch (err) {
+    console.error("shapeResponse error:", err);
+  }
+  res.status(201).json(shaped);
+
+
+
   if (hooks?.afterCreate) {
-    hooks.afterCreate(doc.toObject(), { space, domain, operation: "create", userId }).catch(console.error);
+    hooks.afterCreate(doc.toObject(), { space, domain, operation: "create", payload, userId }).catch(console.error);
   }
 };
 
@@ -265,7 +305,7 @@ export const patch = async (req: Request, res: Response) => {
 
   const hooks = spec.meta?.hooks;
   if (hooks?.beforePatch) {
-    let hookResponse = await hooks.beforePatch(shapedDataOriginal, { space, domain, operation: "create", userId });
+    let hookResponse = await hooks.beforePatch(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
     if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
     shapedData = hookResponse.doc;
   }
@@ -297,9 +337,19 @@ export const patch = async (req: Request, res: Response) => {
 
   const updated = await Model.findOneAndUpdate({ reference }, { $set: shapedData }, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
-  res.json(updated);
+
+  const shapedDoc = fillMissingFields(updated.toObject(), spec);
+  let shaped: any = null;
+  try {
+    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
+  } catch (err) {
+    console.error("shapeResponse error:", err);
+  }
+  res.status(201).json(shaped);
+
+
   if (hooks?.afterPatch) {
-    hooks.afterPatch(updated.toObject(), { space, domain, operation: "patch", userId }).catch(console.error);
+    hooks.afterPatch(updated.toObject(), { space, domain, operation: "patch", payload, userId }).catch(console.error);
   }
 };
 
@@ -316,7 +366,7 @@ export const update = async (req: Request, res: Response) => {
   let shapedData = shapedDataOriginal;
   const hooks = spec.meta?.hooks;
   if (hooks?.beforeUpdate) {
-    let hookResponse = await hooks.beforeUpdate(shapedDataOriginal, { space, domain, operation: "create", userId });
+    let hookResponse = await hooks.beforeUpdate(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
     if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
     shapedData = hookResponse.doc;
   }
@@ -349,9 +399,19 @@ export const update = async (req: Request, res: Response) => {
 
   const updated = await Model.findOneAndUpdate({ reference }, shapedData, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
-  res.json(updated);
+
+  const shapedDoc = fillMissingFields(updated.toObject(), spec);
+  let shaped: any = null;
+  try {
+    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
+  } catch (err) {
+    console.error("shapeResponse error:", err);
+  }
+  res.status(201).json(shaped);
+
+
   if (hooks?.afterUpdate) {
-    hooks.afterUpdate(updated.toObject(), { space, domain, operation: "update", userId }).catch(console.error);
+    hooks.afterUpdate(updated.toObject(), { space, domain, operation: "update", payload, userId }).catch(console.error);
   }
 };
 

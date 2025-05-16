@@ -50,7 +50,7 @@ export const fragmentSpec: SpecDefinition = {
     // },
     "labels": {
       type: "array",
-      required: true,
+      required: false,
       itemType: "string",
       parent: {
         domain: "fragmentLabel", field: "reference"
@@ -72,11 +72,12 @@ export const fragmentSpec: SpecDefinition = {
 
         // Direct insert, no content check
         const timestamp = new Date();
+        const versionTag = await generateVersionTag(FragmentVersion, doc.reference);
         await FragmentVersion.create({
           reference: nanoid(),
           fragmentReference: doc.reference,
           content: doc.content,
-          versionTag: generateVersionTag(),
+          versionTag,
           createdAt: timestamp,
           updatedAt: timestamp,
           createdBy: context.userId,
@@ -106,11 +107,12 @@ const maybeAddFragmentVersion = async (doc: any, context: any) => {
 
   if (!latestVersion || latestVersion.content !== doc.content) {
     const timestamp = new Date();
+    const versionTag = await generateVersionTag(FragmentVersion, doc.reference);
     await FragmentVersion.create({
       reference: nanoid(),
       fragmentReference: doc.reference,
       content: doc.content,
-      versionTag: generateVersionTag(),
+      versionTag,
       createdAt: timestamp,
       updatedAt: timestamp,
       createdBy: context.userId,
@@ -119,8 +121,11 @@ const maybeAddFragmentVersion = async (doc: any, context: any) => {
   }
 };
 
-const generateVersionTag = (): string => {
-  const now = new Date();
-  return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}_` +
-    `${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}.${String(now.getSeconds()).padStart(2, '0')}`;
+const generateVersionTag = async (FragmentVersion: any, fragmentReference: string): Promise<string> => {
+  const latest = await FragmentVersion.find({ fragmentReference })
+    .sort({ versionTag: -1 })
+    .limit(1);
+
+  const latestVersion = latest.length > 0 ? parseInt(latest[0].versionTag, 10) : 0;
+  return (latestVersion + 1).toString();
 };

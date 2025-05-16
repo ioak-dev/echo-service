@@ -17,14 +17,14 @@ module.exports = merge(common, {
   ],
   mode: 'development',
   plugins: [new CleanWebpackPlugin(), new webpack.HotModuleReplacementPlugin(),
-  new CopyPlugin({
-    patterns: [
-      {
-        from: path.resolve(__dirname, "./src/specs"),
-        to: path.resolve(__dirname, "./dist/specs"),
-      },
-    ],
-  }),
+  // new CopyPlugin({
+  //   patterns: [
+  //     {
+  //       from: path.resolve(__dirname, "./src/specs"),
+  //       to: path.resolve(__dirname, "./dist/specs"),
+  //     },
+  //   ],
+  // }),
   ],
   watch: true,
 });
