@@ -9,6 +9,7 @@ import {
   patch,
   search,
   update,
+  generate
 } from "./service";
 import { authorizeApi } from "../../../middlewares";
 
@@ -43,6 +44,8 @@ module.exports = function (router: any) {
     .delete(authorizeApi, transformDomain, deleteOne);
 
   router.post("/resources/:space/:domain/search", authorizeApi, transformDomain, search);
+
+  router.post("/resources/:space/:domain/generate/:generationId", authorizeApi, transformDomain, generate);
 
   router.get("/inference/resources", inferTypes);
 }

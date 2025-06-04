@@ -43,6 +43,20 @@ export const fragmentVersionSpec: SpecDefinition = {
         }
     },
     meta: {
+        generation: [
+            {
+                id: "contrast",
+                prompt: {
+                    prompt: "",
+                    variables: []
+                },
+                target: {
+                    type: "childRecords",
+                    domain: "fragmentInsight",
+                    parentField: "fragmentVersion"
+                }
+            }
+        ],
         hooks: {
             beforeCreate: async (doc, context) => {
                 return applyVersionTagIfMissing(doc);

@@ -4,9 +4,10 @@ import { getCollectionByName } from "../../../lib/dbutils";
 // import { getSpecByName } from "../../specs/specRegistry";
 import { fillMissingFields, validateAndShapePayload } from "../utils/schemaValidator";
 import { getSpecByName } from "../specs/specRegistry";
-import { SpecDefinition, SpecField } from "../specs/types/spec.types";
+import { LLMGenerationSpec, SpecDefinition, SpecField } from "../specs/types/spec.types";
 import { buildQueryFromAdvancedFilters, buildSortQuery } from "../filterBuilder";
 import { generateTypesFromSpecs } from "../utils/typeInference";
+import * as LlmHelper from './llmHelper';
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
@@ -458,6 +459,35 @@ export const deleteOne = async (req: Request, res: Response) => {
   res.status(204).send();
 };
 
+export const generate = async (req: Request, res: Response) => {
+  const { space, domain, generationId } = req.params;
+  const payload = req.body;
+
+  if (!generationId) {
+    return res.status(400).json({ error: 'Missing generationId in payload' });
+  }
+
+  const spec = getSpecByName(domain);
+  if (!spec) {
+    return res.status(404).json({ error: `Domain (${domain}) does not exist` });
+  }
+
+  const generationSpec: LLMGenerationSpec | undefined = spec.meta?.generation?.find(
+    (gen: LLMGenerationSpec) => gen.id === generationId
+  );
+
+  if (!generationSpec) {
+    return res.status(404).json({ error: `Generation spec with id (${generationId}) not found` });
+  }
+
+  try {
+    const result = await LlmHelper.runGeneration(generationSpec, payload);
+    res.status(200).json({ data: result });
+  } catch (err: any) {
+    console.error('Generation error:', err);
+    res.status(500).json({ error: 'Generation failed', details: err.message });
+  }
+};
 
 
 
@@ -470,3 +500,4 @@ export const inferTypes = (req: Request, res: Response) => {
     res.status(500).json({ error: "Error generating types", details: err.message });
   }
 };
+
