@@ -7,6 +7,23 @@ const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
 export const fragmentInsightSpec: SpecDefinition = {
+    displayOptions: {
+        list: {
+            header: { title: "Insights" },
+            fields: [
+                {
+                    key: "userInput",
+                    format: "title"
+                },
+                {
+                    key: "response",
+                    format: "summary"
+                }
+            ]
+        },
+        item: {
+        }
+    },
     fields: {
         "fragmentReference": {
             "type": "string",

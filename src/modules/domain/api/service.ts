@@ -147,8 +147,9 @@ export const getMeta = async (req: Request, res: Response) => {
   ];
 
   const meta = {
+    ...spec,
     domain,
-    fields: spec.fields,
+    // fields: spec.fields,
     // children: spec.meta?.children || [],
     // supportedHooks,
     endpoints

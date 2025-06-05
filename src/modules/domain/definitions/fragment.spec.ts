@@ -6,6 +6,34 @@ const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
 export const fragmentSpec: SpecDefinition = {
+  displayOptions: {
+    list: {
+      header: {
+        title: "Fragment list",
+        subtitle: "List of fragments in the system"
+      },
+      fields: [
+        {
+          key: "name",
+          format: "title"
+        },
+        {
+          key: "content",
+          format: "summary"
+        },
+        {
+          key: "createdAt",
+          format: "date"
+        }
+      ],
+    },
+    item: {
+      header: {
+        title: "View a selected fragment",
+        subtitle: "Lorem ipsum dolor sit",
+      }
+    }
+  },
   fields: {
     "name": {
       type: "string",
@@ -90,7 +118,23 @@ export const fragmentSpec: SpecDefinition = {
       afterPatch: async (doc, context) => {
         await maybeAddFragmentVersion(doc, context);
       }
-    }
+    },
+    children: [
+      {
+        domain: "fragmentVersion",
+        field: {
+          parent: "reference", child: "fragmentReference"
+        },
+        cascadeDelete: true,
+      },
+      {
+        domain: "fragmentInsight",
+        field: {
+          parent: "reference", child: "fragmentReference"
+        },
+        cascadeDelete: true,
+      }
+    ]
   }
 };
 
