@@ -12,6 +12,24 @@ const applyVersionTagIfMissing = async (doc: any) => {
 };
 
 export const fragmentVersionSpec: SpecDefinition = {
+    displayOptions: {
+        list: {
+            header: { title: "Versions" },
+            fields: [
+                {
+                    key: "versionTag",
+                    format: "title"
+                },
+                {
+                    key: "content",
+                    format: "summary"
+                }
+            ]
+        },
+        item: {
+
+        }
+    },
     fields: {
         "fragmentReference": {
             "type": "string",

@@ -16,7 +16,11 @@ export const fragmentInsightSpec: SpecDefinition = {
                     format: "title"
                 },
                 {
-                    key: "response",
+                    key: "mode",
+                    format: "title"
+                },
+                {
+                    key: "response.content",
                     format: "summary"
                 }
             ]
