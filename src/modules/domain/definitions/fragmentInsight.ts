@@ -21,7 +21,8 @@ export const fragmentInsightSpec: SpecDefinition = {
                 },
                 {
                     key: "response.content",
-                    format: "summary"
+                    format: "summary",
+                    collapse: true
                 }
             ]
         },

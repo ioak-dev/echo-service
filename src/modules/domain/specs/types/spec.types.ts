@@ -246,9 +246,13 @@ export type SpecDisplayOptions = {
         visibleIf?: string; // optional expression string or condition
       }>;
     };
+    options?: {
+      showSelectOnRight?: boolean
+    };
     fields: Array<{
       key: string;
       format?: "date" | "title" | "summary" | "html" | "tags" | "boolean";
+      collapse?: boolean;
     }>;
     rowActions?: Array<{
       type: "icon" | "button";

@@ -12,6 +12,9 @@ export const fragmentSpec: SpecDefinition = {
         title: "Fragment list",
         subtitle: "List of fragments in the system"
       },
+      options: {
+        showSelectOnRight: true
+      },
       fields: [
         {
           key: "name",
@@ -19,11 +22,13 @@ export const fragmentSpec: SpecDefinition = {
         },
         {
           key: "content",
-          format: "summary"
+          format: "summary",
+          collapse: true
         },
         {
           key: "createdAt",
-          format: "date"
+          format: "date",
+          collapse: true
         }
       ],
     },
