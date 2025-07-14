@@ -45,6 +45,11 @@ interface ArrayValidation {
   maxItems?: number;
 }
 
+interface TagValidation {
+  maxTags?: number;
+  allowCustomTags?: boolean;
+}
+
 interface BaseField<TValidation = {}> {
   required?: boolean;
   validate?: TValidation & BaseValidation;
@@ -120,13 +125,19 @@ type PrimitiveArrayField = BaseArrayField & {
 
 export type ArrayField = ObjectArrayField | PrimitiveArrayField;
 
+export type TagField = BaseField<TagValidation> & {
+  type: 'tag';
+  parent?: { domain: string; field: string };
+};
+
 export type SpecField =
   | StringField
   | NumberField
   | BooleanField
   | EnumField
   | ObjectField
-  | ArrayField;
+  | ArrayField
+  | TagField;
 
 // === LLM Generation Support ===
 

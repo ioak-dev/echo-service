@@ -145,6 +145,32 @@ export function validateAndShapePayload(
         }
         break;
 
+      case "tag":
+        if (!Array.isArray(value)) {
+          errors.push(`${fullPath} must be an array of tags`);
+        } else {
+          if (field.validate?.maxTags !== undefined && value.length > field.validate.maxTags) {
+            errors.push(`${fullPath} must have at most ${field.validate.maxTags} tags`);
+          }
+
+          const shapedTags = [];
+
+          for (let i = 0; i < value.length; i++) {
+            const tag = value[i];
+            const tagPath = `${fullPath}[${i}]`;
+
+            if (!tag || typeof tag !== "object" || typeof tag.value !== "string") {
+              errors.push(`${tagPath} must be an object with a 'value' field`);
+              continue;
+            }
+
+            shapedTags.push({ value: tag.value, id: tag.id });
+          }
+
+          shapedData[key] = shapedTags;
+        }
+        break;
+
       default:
         errors.push(`${fullPath} has unsupported field type`);
         break;
@@ -176,10 +202,8 @@ export const fillMissingFields = (
     const value = doc[key];
 
     if (value !== undefined && value !== null) {
-      // Directly use existing field value
       shaped[key] = value;
     } else {
-      // Handle defaults based on type
       shaped[key] = getDefaultValueForField(field);
     }
   }

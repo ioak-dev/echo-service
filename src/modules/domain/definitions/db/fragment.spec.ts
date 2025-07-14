@@ -16,18 +16,16 @@ export const fragmentSpec: SpecDefinition = {
       required: false,
     },
     "labels": {
-      type: "array",
+      type: "tag",
       required: false,
-      itemType: "string",
       parent: {
-        domain: "fragmentLabel", field: "reference"
+        domain: "fragmentLabel", field: "label"
       },
     }
   },
   meta: {
     hooks: {
       beforeCreate: async (doc, context) => {
-        console.log(doc, context);
         return { doc, errors: [] };
       },
       afterCreate: async (doc, context) => {
@@ -81,8 +79,6 @@ const maybeAddFragmentVersion = async (doc: any, context: any) => {
     null,
     { sort: { createdAt: -1 } }
   );
-
-  console.log(latestVersion);
 
   if (!latestVersion || latestVersion.content !== doc.content) {
     const timestamp = new Date();

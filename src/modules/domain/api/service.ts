@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { customAlphabet } from 'nanoid';
 import { getCollectionByName } from "../../../lib/dbutils";
-// import { getSpecByName } from "../../specs/specRegistry";
 import { fillMissingFields, validateAndShapePayload } from "../utils/schemaValidator";
 import { getSpecByName } from "../specs/specRegistry";
 import { LLMGenerationSpec, SpecDefinition, SpecField } from "../specs/types/spec.types";
 import { buildQueryFromAdvancedFilters, buildSortQuery } from "../filterBuilder";
 import { generateTypesFromSpecs } from "../utils/typeInference";
 import * as LlmHelper from './llmHelper';
+import { populateTagFields, preprocessTagFields } from "./tagUtils";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
@@ -25,6 +25,11 @@ async function applyShapeResponse(
     }
     return result.doc ?? null;
   }
+
+  if (doc) {
+    await populateTagFields(doc, spec, context.space);
+  }
+
   return doc;
 }
 
@@ -36,30 +41,23 @@ export const checkParentReferences = async (
   res: Response,
   path = ""
 ): Promise<boolean> => {
-  // Loop through each field in the SpecDefinition
   for (const fieldName in spec.fields) {
     const fieldSpec = spec.fields[fieldName];
     const value = shapedData?.[fieldName];
     const fullPath = path ? `${path}.${fieldName}` : fieldName;
 
-    // Skip fields with no value
     if (value === undefined || value === null) continue;
 
-    // Handle fields with a 'parent' property (StringField, NumberField)
     if ('parent' in fieldSpec) {
-      // Only check for parent references on fields with a 'parent' property
       if (
-        ["string", "number"].includes(fieldSpec.type) && // Validate only for 'string' or 'number'
-        fieldSpec.parent && // Ensure 'parent' is defined
-        typeof value === 'string' // The value must be a string (reference)
+        ["string", "number"].includes(fieldSpec.type) &&
+        fieldSpec.parent &&
+        typeof value === 'string'
       ) {
-        // Access the parent model using the domain from the 'parent' property
         const parentModel = getCollectionByName(space, fieldSpec.parent.domain);
-        // Check if the reference exists in the parent model
         const found = await parentModel.findOne({ [fieldSpec.parent.field]: value });
 
         if (!found) {
-          // If not found, return an error response
           res.status(400).json({
             error: `Invalid parent reference '${value}' for '${fullPath}' in domain '${fieldSpec.parent.domain}', field '${fieldSpec.parent.field}'`
           });
@@ -68,7 +66,6 @@ export const checkParentReferences = async (
       }
     }
 
-    // Handle ObjectFields: check parent references in nested fields
     if (fieldSpec.type === 'object') {
       const ok = await checkParentReferences(value, { fields: fieldSpec.fields }, space, res, fullPath);
       if (!ok) return false;
@@ -168,9 +165,6 @@ export const search = async (req: Request, res: Response) => {
     const mongoQuery = buildQueryFromAdvancedFilters(filters, spec);
     const mongoSort = buildSortQuery(sort);
 
-    console.log("Query:", mongoQuery);
-    console.log("Sort:", mongoSort);
-
     const docs = await Model.find(mongoQuery)
       .sort(mongoSort)
       .skip((page - 1) * limit)
@@ -257,6 +251,7 @@ export const create = async (req: Request, res: Response) => {
   }
 
   const timestamp = new Date();
+  await preprocessTagFields(shapedData, spec, space);
   const doc = new Model({
     ...shapedData,
     reference: nanoid(),
@@ -327,11 +322,13 @@ export const patch = async (req: Request, res: Response) => {
     }
   }
 
+  await preprocessTagFields(shapedData, spec, space);
 
   const updated = await Model.findOneAndUpdate({ reference }, { $set: shapedData }, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
 
   const shapedDoc = fillMissingFields(updated.toObject(), spec);
+
   let shaped: any = null;
   try {
     shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
@@ -355,7 +352,7 @@ export const update = async (req: Request, res: Response) => {
   if (!spec) return res.status(404).json({ error: `Domain (${domain}) does not exists` });
 
   const { valid, shapedData: shapedDataOriginal, errors } = validateAndShapePayload(payload, spec);
-
+  console.log("-", shapedDataOriginal);
   let shapedData = shapedDataOriginal;
   const hooks = spec.meta?.hooks;
   if (hooks?.beforeUpdate) {
@@ -387,6 +384,7 @@ export const update = async (req: Request, res: Response) => {
       delete shapedData.order;
     }
   }
+  await preprocessTagFields(shapedData, spec, space);
 
   const updated = await Model.findOneAndUpdate({ reference }, shapedData, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
