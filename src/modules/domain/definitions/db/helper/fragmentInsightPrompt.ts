@@ -1,6 +1,4 @@
-import * as Handlebars from "handlebars";
-import { cloneDeep } from "lodash";
-import { getPrompt, replaceVariables } from "../../../../lib/gptutils";
+import { getPrompt, replaceVariables } from "../../../../../lib/gptutils";
 
 const _MODEL_NAME_GPT3 = "gpt-3.5-turbo";
 const _MODEL_NAME_GPT4 = "gpt-4o";

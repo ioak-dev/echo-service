@@ -55,5 +55,17 @@ export interface FormFieldSchema {
 }
 
 export interface FormSchema {
+    header?: {
+        title?: string;
+        subtitle?: string;
+        actions?: Array<{
+            type: "button" | "link";
+            label: string;
+            action: "edit" | "delete" | "custom";
+            icon?: string;
+            confirm?: boolean;
+            visibleIf?: string;
+        }>;
+    };
     fields: FormFieldSchema[];
 }

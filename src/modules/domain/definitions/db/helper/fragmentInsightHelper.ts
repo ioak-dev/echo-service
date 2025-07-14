@@ -1,8 +1,7 @@
 import { ChatGpt } from "aihub";
-import * as Gptutils from "../../../../lib/gptutils";
 import { getInterpretationPrompt } from "./fragmentInsightPrompt";
 
-const config = require("../../../../../env");
+const config = require("../../../../../../env");
 
 export const interpret = async (args: {
     mode: string,

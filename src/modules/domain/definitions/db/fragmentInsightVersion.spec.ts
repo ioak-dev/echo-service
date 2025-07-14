@@ -1,5 +1,5 @@
-import { getCollectionByName } from "../../../lib/dbutils";
-import { SpecDefinition } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { SpecDefinition } from "../../specs/types/spec.types";
 
 const applyVersionTagIfMissing = async (doc: any) => {
     if (!doc.versionTag) {
@@ -32,10 +32,6 @@ export const fragmentInsightVersionSpec: SpecDefinition = {
         "versionTag": {
             "type": "string",
             "required": false,
-            displayOptions: {
-                label: "Version tag",
-                type: "text"
-            }
         },
         "userInput": {
             "type": "string",

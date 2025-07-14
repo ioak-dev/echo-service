@@ -1,10 +1,10 @@
-import { fragmentSpec } from "../definitions/fragment.spec";
-import { fragmentInsightSpec } from "../definitions/fragmentInsight";
-import { fragmentInsightVersionSpec } from "../definitions/fragmentInsightVersion.spec";
-import { fragmentLabelSpec } from "../definitions/fragmentLabel.spec";
-import { fragmentVersionSpec } from "../definitions/fragmentVersion.spec";
-import { storythreadSpec } from "../definitions/storythread.spec";
-import { storythreadFragmentSpec } from "../definitions/storythreadFragment.spec";
+import { fragmentSpec } from "../definitions/db/fragment.spec";
+import { fragmentInsightSpec } from "../definitions/db/fragmentInsight";
+import { fragmentInsightVersionSpec } from "../definitions/db/fragmentInsightVersion.spec";
+import { fragmentLabelSpec } from "../definitions/db/fragmentLabel.spec";
+import { fragmentVersionSpec } from "../definitions/db/fragmentVersion.spec";
+import { storythreadSpec } from "../definitions/db/storythread.spec";
+import { storythreadFragmentSpec } from "../definitions/db/storythreadFragment.spec";
 import { SpecDefinition } from "./types/spec.types";
 
 const specRegistry: Record<string, SpecDefinition> = {

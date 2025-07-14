@@ -1,5 +1,5 @@
-import { getCollectionByName } from "../../../lib/dbutils";
-import { SpecDefinition } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { SpecDefinition } from "../../specs/types/spec.types";
 
 const applyVersionTagIfMissing = async (doc: any) => {
     if (!doc.versionTag) {
@@ -12,24 +12,24 @@ const applyVersionTagIfMissing = async (doc: any) => {
 };
 
 export const fragmentVersionSpec: SpecDefinition = {
-    displayOptions: {
-        list: {
-            header: { title: "Versions" },
-            fields: [
-                {
-                    key: "versionTag",
-                    format: "title"
-                },
-                {
-                    key: "content",
-                    format: "summary"
-                }
-            ]
-        },
-        item: {
+    // displayOptions: {
+    //     list: {
+    //         header: { title: "Versions" },
+    //         fields: [
+    //             {
+    //                 key: "versionTag",
+    //                 format: "title"
+    //             },
+    //             {
+    //                 key: "content",
+    //                 format: "summary"
+    //             }
+    //         ]
+    //     },
+    //     item: {
 
-        }
-    },
+    //     }
+    // },
     fields: {
         "fragmentReference": {
             "type": "string",
@@ -46,18 +46,10 @@ export const fragmentVersionSpec: SpecDefinition = {
         "versionTag": {
             "type": "string",
             "required": false,
-            displayOptions: {
-                label: "Version tag",
-                type: "text"
-            }
         },
         "userNote": {
             "type": "string",
             "required": false,
-            displayOptions: {
-                label: "Change note",
-                type: "textarea"
-            }
         }
     },
     meta: {

@@ -1,5 +1,5 @@
-import { getCollectionByName } from "../../../lib/dbutils";
-import { SpecDefinition } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { SpecDefinition } from "../../specs/types/spec.types";
 
 export const storythreadFragmentSpec: SpecDefinition = {
   fields: {

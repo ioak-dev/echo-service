@@ -1,34 +1,34 @@
 import { customAlphabet } from "nanoid";
-import { getCollectionByName } from "../../../lib/dbutils";
-import { SpecDefinition } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { SpecDefinition } from "../../specs/types/spec.types";
 import { interpret } from "./helper/fragmentInsightHelper";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
 export const fragmentInsightSpec: SpecDefinition = {
-    displayOptions: {
-        list: {
-            header: { title: "Insights" },
-            fields: [
-                {
-                    key: "userInput",
-                    format: "title"
-                },
-                {
-                    key: "mode",
-                    format: "title"
-                },
-                {
-                    key: "response.content",
-                    format: "summary",
-                    collapse: true
-                }
-            ]
-        },
-        item: {
-        }
-    },
+    // displayOptions: {
+    //     list: {
+    //         header: { title: "Insights" },
+    //         fields: [
+    //             {
+    //                 key: "userInput",
+    //                 format: "title"
+    //             },
+    //             {
+    //                 key: "mode",
+    //                 format: "title"
+    //             },
+    //             {
+    //                 key: "response.content",
+    //                 format: "summary",
+    //                 collapse: true
+    //             }
+    //         ]
+    //     },
+    //     item: {
+    //     }
+    // },
     fields: {
         "fragmentReference": {
             "type": "string",

@@ -1,86 +1,20 @@
 import { customAlphabet } from 'nanoid';
-import { getCollectionByName } from "../../../lib/dbutils";
-import { SpecDefinition, ToolbarOption } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { SpecDefinition, ToolbarOption } from "../../specs/types/spec.types";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
 export const fragmentSpec: SpecDefinition = {
-  displayOptions: {
-    list: {
-      header: {
-        title: "Fragment list",
-        subtitle: "List of fragments in the system"
-      },
-      options: {
-        showSelectOnRight: true
-      },
-      fields: [
-        {
-          key: "name",
-          format: "title"
-        },
-        {
-          key: "content",
-          format: "summary",
-          collapse: true
-        },
-        {
-          key: "createdAt",
-          format: "date",
-          collapse: true
-        }
-      ],
-    },
-    item: {
-      header: {
-        title: "View a selected fragment",
-        subtitle: "Lorem ipsum dolor sit",
-      }
-    }
-  },
   fields: {
     "name": {
       type: "string",
       required: true,
-      displayOptions: {
-        type: "h2",
-        // label: "Fragment name"
-      }
     },
     "content": {
       type: "string",
       required: false,
-      displayOptions: {
-        type: "richtext",
-        toolbarOptions: [
-          ToolbarOption.Bold,
-          ToolbarOption.Italic,
-          ToolbarOption.Underline,
-          ToolbarOption.AlignLeft,
-          ToolbarOption.AlignCenter,
-          ToolbarOption.AlignRight,
-          ToolbarOption.AlignJustify,
-          ToolbarOption.Heading,
-          ToolbarOption.BulletList,
-          ToolbarOption.OrderedList,
-          // ToolbarOption.ClearFormatting,
-        ]
-        // label: "Draft"
-      }
     },
-    // "contentTest": {
-    //   type: "string",
-    //   required: false,
-    //   displayOptions: {
-    //     type: "richtext",
-    //     toolbarOptions: [
-    //       ToolbarOption.Heading,
-    //       ToolbarOption.BulletList,
-    //       ToolbarOption.OrderedList,
-    //     ]
-    //   }
-    // },
     "labels": {
       type: "array",
       required: false,
@@ -88,10 +22,6 @@ export const fragmentSpec: SpecDefinition = {
       parent: {
         domain: "fragmentLabel", field: "reference"
       },
-      displayOptions: {
-        type: "autocomplete",
-        label: "Labels"
-      }
     }
   },
   meta: {

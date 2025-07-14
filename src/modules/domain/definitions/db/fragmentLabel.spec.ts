@@ -1,6 +1,6 @@
-import { getCollectionByName } from "../../../lib/dbutils";
-import { normalizeLabel } from "../../../lib/Utils";
-import { SpecDefinition } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../../lib/dbutils";
+import { normalizeLabel } from "../../../../lib/Utils";
+import { SpecDefinition } from "../../specs/types/spec.types";
 
 export const fragmentLabelSpec: SpecDefinition = {
   fields: {
