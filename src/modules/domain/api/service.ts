@@ -74,7 +74,6 @@ export const checkParentReferences = async (
       if (!ok) return false;
     }
 
-    // Handle ArrayFields: check each item in the array for parent references
     if (fieldSpec.type === 'array' && Array.isArray(value)) {
       const itemFields = fieldSpec.fields;
 
@@ -82,16 +81,14 @@ export const checkParentReferences = async (
         const item = value[i];
         const itemPath = `${fullPath}[${i}]`;
 
-        // Handle object items in arrays
         if (fieldSpec.itemType === 'object' && itemFields) {
           const ok = await checkParentReferences(item, { fields: itemFields }, space, res, itemPath);
           if (!ok) return false;
         }
 
-        // Handle array items with parent references
         if (
           ["string", "number"].includes(fieldSpec.itemType) &&
-          fieldSpec.parent && // Check if 'parent' is defined for array items
+          fieldSpec.parent &&
           typeof item === "string"
         ) {
           const parentModel = getCollectionByName(space, fieldSpec.parent.domain);
@@ -112,13 +109,11 @@ export const checkParentReferences = async (
 
 async function reorderWithinGroup(Model: any, reference: any, groupFilter: any, oldOrder: number, newOrder: number) {
   if (newOrder > oldOrder) {
-    // Move down: shift others up
     await Model.updateMany(
       { ...groupFilter, order: { $gt: oldOrder, $lte: newOrder } },
       { $inc: { order: -1 } }
     );
   } else {
-    // Move up: shift others down
     await Model.updateMany(
       { ...groupFilter, order: { $lt: oldOrder, $gte: newOrder } },
       { $inc: { order: 1 } }
@@ -157,7 +152,6 @@ export const getMeta = async (req: Request, res: Response) => {
 
   res.json(meta);
 };
-
 
 export const search = async (req: Request, res: Response) => {
   const { space, domain } = req.params;
@@ -251,7 +245,6 @@ export const create = async (req: Request, res: Response) => {
 
   const Model = getCollectionByName(space, domain);
 
-  // Logic to create ordering
   if (spec.meta?.ordering?.length) {
     const groupFilter: any = {};
     for (const field of spec.meta.ordering) {
@@ -317,7 +310,6 @@ export const patch = async (req: Request, res: Response) => {
 
   const Model = getCollectionByName(space, domain);
 
-  // Adjust ordering
   if (spec.meta?.ordering?.length && shapedData.order !== undefined) {
     const oldDoc = await Model.findOne({ reference });
     const oldOrder = oldDoc?.order;
@@ -331,7 +323,6 @@ export const patch = async (req: Request, res: Response) => {
 
       await reorderWithinGroup(Model, reference, groupFilter, oldOrder, newOrder);
 
-      // Prevent overwriting the order field again
       delete shapedData.order;
     }
   }
@@ -380,7 +371,6 @@ export const update = async (req: Request, res: Response) => {
 
   const Model = getCollectionByName(space, domain);
 
-  // Adjust ordering
   if (spec.meta?.ordering?.length && shapedData.order !== undefined) {
     const oldDoc = await Model.findOne({ reference });
     const oldOrder = oldDoc?.order;
@@ -394,7 +384,6 @@ export const update = async (req: Request, res: Response) => {
 
       await reorderWithinGroup(Model, reference, groupFilter, oldOrder, newOrder);
 
-      // Prevent overwriting the order field again
       delete shapedData.order;
     }
   }
@@ -443,10 +432,8 @@ export const deleteOne = async (req: Request, res: Response) => {
     const ChildModel = getCollectionByName(space, childDomain);
 
     if (cascadeDelete) {
-      // Delete dependent child records
       await ChildModel.deleteMany({ [childField]: parentValue });
     } else {
-      // Check for dependent records and block deletion if any
       const dependent = await ChildModel.findOne({ [childField]: parentValue });
       if (dependent) {
         return res.status(400).json({

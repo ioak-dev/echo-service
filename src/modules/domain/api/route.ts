@@ -12,6 +12,7 @@ import {
   generate
 } from "./service";
 import { authorizeApi } from "../../../middlewares";
+import { getUiMeta } from "./uiService";
 
 const router = express.Router();
 // middleware/transformDomain.ts
@@ -31,6 +32,13 @@ export const transformDomain = (
 };
 
 module.exports = function (router: any) {
+  router
+    .route("/resources-ui/:space/:domain/:formName")
+    .get(authorizeApi, transformDomain, getUiMeta);
+  router
+    .route("/resources-ui/:space/:domain")
+    .get(authorizeApi, transformDomain, getUiMeta);
+
   router
     .route("/resources/:space/:domain")
     .get(authorizeApi, transformDomain, getMeta)
