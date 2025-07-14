@@ -56,8 +56,8 @@ export interface FormFieldSchema {
 
 export interface FormSchema {
     header?: {
-        title?: string;
-        subtitle?: string;
+        title?: { type: "static" | "dynamic", field?: string, value?: string };
+        subtitle?: { type: "static" | "dynamic", field?: string, value?: string };
         actions?: Array<{
             type: "button" | "link";
             label: string;

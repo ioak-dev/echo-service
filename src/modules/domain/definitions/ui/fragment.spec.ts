@@ -1,6 +1,12 @@
 import { FormSchema } from "../../specs/types/uispec.types";
 
 const defaultSchema: FormSchema = {
+    header: {
+        title: { type: "dynamic", field: "name" },
+        subtitle: { type: "static", value: "your disconnected thoughts" },
+        actions: [
+        ]
+    },
     fields: [
         {
             name: 'name',
