@@ -54,18 +54,27 @@ export interface FormFieldSchema {
     fields?: FormFieldSchema[];
 }
 
+export interface FormAction {
+    label: string;
+    type: "edit" | "delete" | "generate" | "custom";
+
+    generation?: {
+        id: string;
+        inputFields?: FormFieldSchema[];
+        confirmPrompt?: {
+            title?: string;
+            message?: string;
+            confirmLabel?: string;
+            cancelLabel?: string;
+        };
+    };
+}
+
 export interface FormSchema {
     header?: {
         title?: { type: "static" | "dynamic", field?: string, value?: string };
         subtitle?: { type: "static" | "dynamic", field?: string, value?: string };
-        actions?: Array<{
-            type: "button" | "link";
-            label: string;
-            action: "edit" | "delete" | "custom";
-            icon?: string;
-            confirm?: boolean;
-            visibleIf?: string;
-        }>;
+        actions?: FormAction[];
     };
     fields: FormFieldSchema[];
 }
