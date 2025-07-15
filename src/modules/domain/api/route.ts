@@ -53,7 +53,7 @@ module.exports = function (router: any) {
 
   router.post("/resources/:space/:domain/search", authorizeApi, transformDomain, search);
 
-  router.post("/resources/:space/:domain/generate/:generationId", authorizeApi, transformDomain, generate);
+  router.post("/resources/:space/:domain/:reference/generate/:generationId", authorizeApi, transformDomain, generate);
 
   router.get("/inference/resources", inferTypes);
 }

@@ -1,4 +1,4 @@
-import { ChatGpt } from "aihub";
+import { LlmRunner } from "aihub";
 import { getInterpretationPrompt } from "./fragmentInsightPrompt";
 
 const config = require("../../../../../../env");
@@ -9,11 +9,11 @@ export const interpret = async (args: {
     userInput: string,
     response?: string
 }) => {
-    const gptResponse = await ChatGpt.process(
+    const gptResponse = await LlmRunner.runner.chatgpt.predict(
         config.CHATGPT_API_KEY,
         "/v1/chat/completions",
         getInterpretationPrompt(args),
         "object"
-      );
+    );
     return gptResponse;
 };

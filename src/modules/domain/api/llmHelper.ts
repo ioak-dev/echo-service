@@ -1,58 +1,145 @@
-import { LLMGenerationSpec, PromptTemplate } from "../specs/types/spec.types";
+import { LlmRunner, PromptBuilder, PromptUtils } from "aihub";
+import { FieldMapping, LLMGenerationSpec, PromptTemplate } from "../specs/types/spec.types";
+import { getCollectionByName } from "../../../lib/dbutils";
+import { createDocument } from "./createHelper";
+import { map } from "lodash";
 
-export const runGeneration = async (spec: LLMGenerationSpec, payload: any) => {
-  // 1. Prepare prompt by filling PromptTemplate with payload data
-  const prompt = fillPrompt(spec.prompt, payload);
 
-  // 2. Call your LLM or generation backend with options
-  const generationResult = await callLLMModel(prompt, spec.options);
+const config = require("../../../../env");
 
-  // 3. Map output fields if mapFields defined
-  let mappedResult = generationResult;
-  if (spec.postProcess?.mapFields) {
-    mappedResult = mapFields(generationResult, spec.postProcess.mapFields);
+async function updateRecordField(
+  space: string,
+  domain: string,
+  reference: string,
+  payload: any
+): Promise<void> {
+  const Model = getCollectionByName(space, domain);
+
+  const result = await Model.updateOne({ reference }, { $set: payload });
+
+  if (result.matchedCount === 0) {
+    throw new Error(`No record found to update with reference ${reference} in ${domain}`);
+  }
+}
+async function createChildRecords(
+  space: string,
+  domain: string,
+  parentField: string,
+  reference: string,
+  data: any,
+): Promise<void> {
+  const records = Array.isArray(data) ? data : [data];
+
+  for (const record of records) {
+    const enrichedRecord = {
+      [parentField]: reference,
+      ...record,
+    };
+
+    if (record.reference) {
+      try {
+        await updateRecordField(space, domain, record.reference, enrichedRecord);
+      } catch (err) {
+        await createDocument({
+          space,
+          domain,
+          payload: enrichedRecord,
+        });
+      }
+    } else {
+      await createDocument({
+        space,
+        domain,
+        payload: enrichedRecord,
+        skipBeforeCreateHook: true
+      });
+    }
+  }
+}
+
+export const runGeneration = async (
+  space: string,
+  spec: LLMGenerationSpec,
+  domain: string,
+  reference: string,
+  payload: any
+) => {
+
+  const Model = getCollectionByName(space, domain);
+  const baseRecord = await Model.findOne({ reference });
+
+  if (!baseRecord) {
+    throw new Error(`Record with reference (${reference}) not found in domain (${domain})`);
   }
 
-  // 4. Validate output if needed
-  if (spec.postProcess?.validate) {
-    const valid = validateOutput(mappedResult);
-    if (!valid) throw new Error('Output validation failed');
+  const mergedData = { ...baseRecord, ...payload };
+
+  const prompt = PromptUtils.replacePlaceholders(spec.prompt, mergedData);
+  const chatgptPrompt = PromptBuilder.adapters.chatgpt.convert(prompt);
+
+  console.log(chatgptPrompt);
+
+  const llmOutput = await LlmRunner.runner.chatgpt.predict(
+    config.CHATGPT_API_KEY,
+    "/v1/chat/completions",
+    chatgptPrompt,
+    "object"
+  );
+
+
+  const mappedOutput = applyPostProcessing(llmOutput.responseObject, spec.mapFields, baseRecord, payload);
+  console.log(mappedOutput)
+
+  if (spec.target.type === "field") {
+    await updateRecordField(space, domain, reference, mappedOutput);
+  } else if (spec.target.type === "childRecords") {
+    await createChildRecords(
+      space,
+      spec.target.domain,
+      spec.target.parentField,
+      reference,
+      mappedOutput
+    );
   }
 
-  return mappedResult;
+  return mappedOutput;
+};
+
+function getValueByPath(obj: any, path: string): any {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
 }
 
-function fillPrompt(promptTemplate: PromptTemplate, data: any): string {
-  // Your logic to replace placeholders in promptTemplate with data
-  // e.g. a simple string replace, or use a templating library
-  // For example: promptTemplate.text.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || '');
-  return promptTemplate.prompt.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] ?? '');
-}
+function applyPostProcessing(
+  llmOutput: any,
+  mapFields: { [targetField: string]: FieldMapping },
+  parentData: any,
+  inputPayload: any
+): Record<string, any> {
+  console.log(llmOutput)
+  const result: Record<string, any> = {};
 
-function mapFields(result: any, map: { [key: string]: string }): any {
-  const mapped: any = {};
-  for (const [genField, targetField] of Object.entries(map)) {
-    mapped[targetField] = result[genField];
+  for (const [targetField, mapping] of Object.entries(mapFields)) {
+    let value;
+
+    switch (mapping.source) {
+      case "llm":
+        value = mapping.path ? getValueByPath(llmOutput, mapping.path) : "";
+        break;
+      case "parent":
+        value = mapping.path ? getValueByPath(parentData, mapping.path) : "";
+        break;
+      case "input":
+        value = mapping.path ? getValueByPath(inputPayload, mapping.path) : "";
+        break;
+      case "static":
+        value = mapping.value;
+        break;
+    }
+
+    result[targetField] = value;
   }
-  return mapped;
+
+  return result;
 }
 
-async function callLLMModel(prompt: string, options?: any): Promise<any> {
-  // Call your LLM API with prompt and options like model, temperature, maxTokens
-  // For example, pseudo-code:
-  /*
-  const response = await llmClient.generate({
-    prompt,
-    model: options?.model,
-    temperature: options?.temperature,
-    maxTokens: options?.maxTokens,
-  });
-  return response.data;
-  */
-  return { generatedText: `Simulated output for prompt: ${prompt}` }; // placeholder
-}
 
-function validateOutput(output: any): boolean {
-  // Your validation logic, e.g. check required fields, types, formats
-  return true; // placeholder
-}

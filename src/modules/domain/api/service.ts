@@ -8,15 +8,16 @@ import { buildQueryFromAdvancedFilters, buildSortQuery } from "../filterBuilder"
 import { generateTypesFromSpecs } from "../utils/typeInference";
 import * as LlmHelper from './llmHelper';
 import { populateTagFields, preprocessTagFields } from "./tagUtils";
+import { createDocument } from "./createHelper";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
-async function applyShapeResponse(
+export const applyShapeResponse = async (
   doc: any,
   spec: SpecDefinition,
   context: any
-): Promise<any | null> {
+): Promise<any | null> => {
   const hooks = spec.meta?.hooks;
   if (hooks?.shapeResponse) {
     const result = await hooks.shapeResponse(doc, context);
@@ -214,68 +215,14 @@ export const getOne = async (req: Request, res: Response) => {
 
 export const create = async (req: Request, res: Response) => {
   const { space, domain } = req.params;
-  const payload = req.body;
   const userId = req.user?.user_id;
+  const payload = req.body;
 
-  const spec = getSpecByName(domain);
-  if (!spec) return res.status(404).json({ error: `Domain (${domain}) does not exists` });
-
-  const { valid, shapedData: shapedDataOriginal, errors } = validateAndShapePayload(payload, spec);
-
-  let shapedData = shapedDataOriginal;
-
-  if (!valid) return res.status(400).json({ error: "Validation failed", details: errors });
-
-  const hooks = spec.meta?.hooks;
-  if (hooks?.beforeCreate) {
-    let hookResponse = await hooks.beforeCreate(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
-    if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
-    shapedData = hookResponse.doc;
-  }
-
-  const ok = await checkParentReferences(shapedData, spec, space, res);
-  if (!ok) return;
-
-
-  const Model = getCollectionByName(space, domain);
-
-  if (spec.meta?.ordering?.length) {
-    const groupFilter: any = {};
-    for (const field of spec.meta.ordering) {
-      groupFilter[field] = shapedData[field];
-    }
-
-    const lastInGroup = await Model.find(groupFilter).sort({ order: -1 }).limit(1);
-    const maxOrder = lastInGroup[0]?.order ?? 0;
-    shapedData.order = maxOrder + 1;
-  }
-
-  const timestamp = new Date();
-  await preprocessTagFields(shapedData, spec, space);
-  const doc = new Model({
-    ...shapedData,
-    reference: nanoid(),
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    createdBy: userId,
-    updatedBy: userId
-  });
-
-  await doc.save();
-
-  const shapedDoc = fillMissingFields(doc.toObject(), spec);
-  let shaped: any = null;
   try {
-    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
-  } catch (err) {
-    console.error("shapeResponse error:", err);
-  }
-  res.status(201).json(shaped);
-
-
-
-  if (hooks?.afterCreate) {
-    hooks.afterCreate(doc.toObject(), { space, domain, operation: "create", payload, userId }).catch(console.error);
+    const result = await createDocument({ space, domain, payload, userId });
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
@@ -446,7 +393,7 @@ export const deleteOne = async (req: Request, res: Response) => {
 };
 
 export const generate = async (req: Request, res: Response) => {
-  const { space, domain, generationId } = req.params;
+  const { space, domain, reference, generationId } = req.params;
   const payload = req.body;
 
   if (!generationId) {
@@ -467,7 +414,7 @@ export const generate = async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await LlmHelper.runGeneration(generationSpec, payload);
+    const result = await LlmHelper.runGeneration(space, generationSpec, domain, reference, payload);
     res.status(200).json({ data: result });
   } catch (err: any) {
     console.error('Generation error:', err);

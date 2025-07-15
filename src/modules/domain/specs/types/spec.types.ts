@@ -1,3 +1,5 @@
+import { PromptBuilder } from 'aihub';
+
 export interface HookContext {
   space: string;
   domain: string;
@@ -142,7 +144,7 @@ export type SpecField =
 // === LLM Generation Support ===
 
 export type GenerationTarget =
-  | { type: "field"; field: string }
+  | { type: "field"; }
   | { type: "childRecords"; domain: string; parentField: string };
 
 export interface PromptTemplate {
@@ -150,22 +152,19 @@ export interface PromptTemplate {
   variables: string[];
 }
 
+export interface FieldMapping {
+  source: "llm" | "parent" | "input" | "static";
+  path?: string; // supports dot notation
+  value?: any;  // if source is "static"
+}
+
 export interface LLMGenerationSpec {
   id: string;
-  description?: string;
-
   target: GenerationTarget;
-  prompt: PromptTemplate;
+  prompt: PromptBuilder.Types.UniversalPrompt;
 
-  options?: {
-    model?: string;
-    temperature?: number;
-    maxTokens?: number;
-  };
-
-  postProcess?: {
-    mapFields?: { [generatedField: string]: string };
-    validate?: boolean;
+  mapFields: {
+    [targetField: string]: FieldMapping;
   };
 }
 
