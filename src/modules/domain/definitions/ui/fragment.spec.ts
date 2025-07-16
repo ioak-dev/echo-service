@@ -5,6 +5,52 @@ const defaultSchema: FormSchema = {
         title: { type: "dynamic", field: "name" },
         subtitle: { type: "static", value: "your disconnected thoughts" },
         actions: [
+            {
+                type: "save",
+                label: "Save",
+            },
+            {
+                type: "reset",
+                label: "Reset",
+            },
+            {
+                type: "generate",
+                label: "Generate summary",
+                generation: {
+                    id: "summary",
+                }
+            },
+            {
+                type: "generate",
+                label: "Generate insight",
+                generation: {
+                    id: "insight",
+                    inputFields: [
+                        {
+                            name: "mode",
+                            type: "select",
+                            label: "Mode",
+                            conversationalPrompt: "What kind of insight would you like to generate?",
+                            options: [
+                                {
+                                    label: "Interpret",
+                                    value: "interpret"
+                                },
+                                {
+                                    label: "Expand",
+                                    value: "expand"
+                                }
+                            ]
+                        },
+                        {
+                            name: "userInput",
+                            type: "textarea",
+                            label: "Prompt",
+                            conversationalPrompt: "What would you like to do?"
+                        }
+                    ]
+                }
+            }
         ]
     },
     fields: [
