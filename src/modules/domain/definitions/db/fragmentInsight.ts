@@ -76,6 +76,74 @@ export const fragmentInsightSpec: SpecDefinition = {
         },
     },
     meta: {
+        generation: [
+            {
+                id: "generate",
+                target: {
+                    type: "childRecords",
+                    domain: "fragment"
+                },
+                mapFields:
+                {
+                    "response": { source: "llm", path: "content" },
+                    "mode": { source: "input", path: "mode" },
+                    "userInput": { source: "input", path: "userInput" },
+                    "fragmentVersionReference": { source: "static", value: "pKETVTOn" }
+                },
+                prompt: {
+                    systemMessages: ['You are a creative writing companion that helps interpret raw story fragments. Interpretations are symbolic, speculative, and intuitive—not editorial. Output must be valid JSON:\n{\n  \"content\": string\n}'],
+                    userMessages: [
+                        `Interpret the story fragment symbolically or thematically. Let the user input guide your interpretive lens. If a previous response exists, revise or build upon it with new insights. Avoid simply repeating it.
+            
+            Fragment:
+            {{content}}
+            
+            User Input (interpretive angle, theme, or focus):
+            {{userInput}}
+            
+            Return JSON in the format:
+            { "content": "..." }`
+                    ],
+                    assistantMessages: [],
+                    variables: ['content'],
+                    responseType: 'json',
+                    responseFormat: { text: 'string' }
+                }
+            },
+            {
+                id: "regenerate",
+                target: {
+                    type: "field"
+                },
+                mapFields:
+                {
+                    "response": { source: "llm", path: "content" },
+                    "userInput": { source: "input", path: "userInput" },
+                },
+                prompt: {
+                    systemMessages: ['You are a creative writing companion that helps interpret raw story fragments. Interpretations are symbolic, speculative, and intuitive—not editorial. Output must be valid JSON:\n{\n  \"content\": string\n}'],
+                    userMessages: [
+                        `Interpret the story fragment symbolically or thematically. Let the user input guide your interpretive lens. If a previous response exists, revise or build upon it with new insights. Avoid simply repeating it.
+            
+            Fragment:
+            {{content}}
+            
+            User Input (interpretive angle, theme, or focus):
+            {{userInput}}
+            
+            Previous Response (if any):
+            {{previousResponse}}
+            
+            Return JSON in the format:
+            { "content": "..." }`
+                    ],
+                    assistantMessages: [],
+                    variables: ['content'],
+                    responseType: 'json',
+                    responseFormat: { text: 'string' }
+                }
+            }
+        ],
         hooks: {
             beforeCreate: async (doc, context) => {
                 const output = await interpret({

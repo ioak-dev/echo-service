@@ -15,6 +15,10 @@ export const fragmentSpec: SpecDefinition = {
       type: "string",
       required: false,
     },
+    "summary": {
+      type: "string",
+      required: false,
+    },
     "labels": {
       type: "tag",
       required: false,
@@ -24,65 +28,6 @@ export const fragmentSpec: SpecDefinition = {
     }
   },
   meta: {
-    generation: [
-      {
-        id: "summary",
-        target: {
-          type: "field",
-        },
-        mapFields:
-        {
-          "summary": {
-            source: "llm",
-            path: "text"
-          }
-        },
-        prompt: {
-          systemMessages: ['You are an AI assistant tasked with summarizing text.'],
-          userMessages: [
-            'Please summarize the following content into a single sentence: {{content}}'
-          ],
-          assistantMessages: ['Here is the summary of the content:'],
-          variables: ['content'],
-          responseType: 'json',
-          responseFormat: { text: 'string' }
-        }
-      },
-      {
-        id: "insight",
-        target: {
-          type: "childRecords",
-          domain: "fragmentInsight",
-          parentField: "fragmentReference"
-        },
-        mapFields:
-        {
-          "response": { source: "llm", path: "content" },
-          "mode": { source: "input", path: "mode" },
-          "userInput": { source: "input", path: "userInput" },
-          "fragmentVersionReference": { source: "static", value: "pKETVTOn" }
-        },
-        prompt: {
-          systemMessages: ['You are a creative writing companion that helps interpret raw story fragments. Interpretations are symbolic, speculative, and intuitive—not editorial. Output must be valid JSON:\n{\n  \"content\": string\n}'],
-          userMessages: [
-            `Interpret the story fragment symbolically or thematically. Let the user input guide your interpretive lens. If a previous response exists, revise or build upon it with new insights. Avoid simply repeating it.
-
-Fragment:
-{{content}}
-
-User Input (interpretive angle, theme, or focus):
-{{userInput}}
-
-Return JSON in the format:
-{ "content": "..." }`
-          ],
-          assistantMessages: [],
-          variables: ['content'],
-          responseType: 'json',
-          responseFormat: { text: 'string' }
-        }
-      }
-    ],
     hooks: {
       beforeCreate: async (doc, context) => {
         return { doc, errors: [] };

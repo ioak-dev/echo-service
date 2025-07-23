@@ -6,9 +6,11 @@ import { getSpecByName } from "../specs/specRegistry";
 import { LLMGenerationSpec, SpecDefinition, SpecField } from "../specs/types/spec.types";
 import { buildQueryFromAdvancedFilters, buildSortQuery } from "../filterBuilder";
 import { generateTypesFromSpecs } from "../utils/typeInference";
-import * as LlmHelper from './llmHelper';
+import * as LlmHelper from './aiHelper';
 import { populateTagFields, preprocessTagFields } from "./tagUtils";
 import { createDocument } from "./createHelper";
+import { getAiSpec } from "../specs/aiSpecRegistry";
+import { GenerationSpec } from "../specs/types/aispec.types";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
@@ -392,29 +394,41 @@ export const deleteOne = async (req: Request, res: Response) => {
   res.status(204).send();
 };
 
+interface GenerateQueryType {
+  reference?: string;
+  parentReference?: string;
+}
+
 export const generate = async (req: Request, res: Response) => {
-  const { space, domain, reference, generationId } = req.params;
+  const { space, generationId } = req.params;
   const payload = req.body;
+
+  const { reference, parentReference }: GenerateQueryType = req.query;
+
+  console.log(generationId, reference, parentReference, payload);
 
   if (!generationId) {
     return res.status(400).json({ error: 'Missing generationId in payload' });
   }
 
-  const spec = getSpecByName(domain);
-  if (!spec) {
-    return res.status(404).json({ error: `Domain (${domain}) does not exist` });
+  if (!reference && !parentReference) {
+    return res.status(400).json({ error: 'Missing both reference and parentReference in query parameters' });
   }
 
-  const generationSpec: LLMGenerationSpec | undefined = spec.meta?.generation?.find(
-    (gen: LLMGenerationSpec) => gen.id === generationId
-  );
+  const spec: GenerationSpec | undefined = getAiSpec(generationId);
 
-  if (!generationSpec) {
+  if (!spec) {
     return res.status(404).json({ error: `Generation spec with id (${generationId}) not found` });
   }
 
   try {
-    const result = await LlmHelper.runGeneration(space, generationSpec, domain, reference, payload);
+    const result = await LlmHelper.runGeneration({
+      space,
+      spec,
+      reference,
+      parentReference,
+      payload
+    });
     res.status(200).json({ data: result });
   } catch (err: any) {
     console.error('Generation error:', err);

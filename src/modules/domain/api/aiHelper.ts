@@ -3,6 +3,7 @@ import { FieldMapping, LLMGenerationSpec, PromptTemplate } from "../specs/types/
 import { getCollectionByName } from "../../../lib/dbutils";
 import { createDocument } from "./createHelper";
 import { map } from "lodash";
+import { GenerationSpec } from "../specs/types/aispec.types";
 
 
 const config = require("../../../../env");
@@ -21,35 +22,36 @@ async function updateRecordField(
     throw new Error(`No record found to update with reference ${reference} in ${domain}`);
   }
 }
-async function createChildRecords(
+async function createChildRecords(params: {
   space: string,
   domain: string,
+  parentReference: string,
   parentField: string,
-  reference: string,
   data: any,
+}
 ): Promise<void> {
-  const records = Array.isArray(data) ? data : [data];
+  const records = Array.isArray(params.data) ? params.data : [params.data];
 
   for (const record of records) {
     const enrichedRecord = {
-      [parentField]: reference,
+      [params.parentField]: params.parentReference,
       ...record,
     };
 
     if (record.reference) {
       try {
-        await updateRecordField(space, domain, record.reference, enrichedRecord);
+        await updateRecordField(params.space, params.domain, record.reference, enrichedRecord);
       } catch (err) {
         await createDocument({
-          space,
-          domain,
+          space: params.space,
+          domain: params.domain,
           payload: enrichedRecord,
         });
       }
     } else {
       await createDocument({
-        space,
-        domain,
+        space: params.space,
+        domain: params.domain,
         payload: enrichedRecord,
         skipBeforeCreateHook: true
       });
@@ -57,24 +59,46 @@ async function createChildRecords(
   }
 }
 
-export const runGeneration = async (
+export const runGeneration = async (params: {
   space: string,
-  spec: LLMGenerationSpec,
-  domain: string,
-  reference: string,
+  spec: GenerationSpec,
+  reference?: string,
+  parentReference?: string,
   payload: any
+}
 ) => {
 
-  const Model = getCollectionByName(space, domain);
-  const baseRecord = await Model.findOne({ reference });
+  const Model = getCollectionByName(params.space, params.spec.domain);
+  let baseRecord = {};
+  if (params.reference) {
+    baseRecord = await Model.findOne({ reference: params.reference });
 
-  if (!baseRecord) {
-    throw new Error(`Record with reference (${reference}) not found in domain (${domain})`);
+    if (!baseRecord) {
+      throw new Error(`Record with reference (${params.reference}) not found in domain (${params.spec.domain})`);
+    }
   }
 
-  const mergedData = { ...baseRecord, ...payload };
+  let parentRecord = {};
 
-  const prompt = PromptUtils.replacePlaceholders(spec.prompt, mergedData);
+  if (params.spec.parentDomain && params.parentReference) {
+    const ParentModel = getCollectionByName(params.space, params.spec.parentDomain);
+    parentRecord = await ParentModel.findOne({ reference: params.parentReference });
+
+    if (!parentRecord) {
+      throw new Error(`Parent record with reference (${params.parentReference}) not found in domain (${params.spec.parentDomain})`);
+    }
+  }
+
+  const contextData = {
+    [params.spec.domain]: baseRecord,
+    payload: params.payload
+  }
+
+  if (params.spec.parentDomain) {
+    contextData[params.spec.parentDomain] = parentRecord;
+  }
+
+  const prompt = PromptUtils.replacePlaceholders(params.spec.prompt, contextData);
   const chatgptPrompt = PromptBuilder.adapters.chatgpt.convert(prompt);
 
   console.log(chatgptPrompt);
@@ -86,20 +110,22 @@ export const runGeneration = async (
     "object"
   );
 
+  console.log(llmOutput);
 
-  const mappedOutput = applyPostProcessing(llmOutput.responseObject, spec.mapFields, baseRecord, payload);
+
+  const mappedOutput = applyPostProcessing(llmOutput.responseObject, params.spec.mapFields, baseRecord, params.payload);
   console.log(mappedOutput)
 
-  if (spec.target.type === "field") {
-    await updateRecordField(space, domain, reference, mappedOutput);
-  } else if (spec.target.type === "childRecords") {
-    await createChildRecords(
-      space,
-      spec.target.domain,
-      spec.target.parentField,
-      reference,
-      mappedOutput
-    );
+  if (params.spec.target.type === "fields" && params.reference) {
+    await updateRecordField(params.space, params.spec.domain, params.reference, mappedOutput);
+  } else if (params.spec.target.type === "childRecords" && params.parentReference) {
+    await createChildRecords({
+      space: params.space,
+      domain: params.spec.target.domain,
+      parentField: params.spec.target.parentField,
+      parentReference: params.parentReference,
+      data: mappedOutput
+    });
   }
 
   return mappedOutput;

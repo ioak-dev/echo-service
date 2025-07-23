@@ -145,7 +145,7 @@ export type SpecField =
 
 export type GenerationTarget =
   | { type: "field"; }
-  | { type: "childRecords"; domain: string; parentField: string };
+  | { type: "childRecords"; domain: string; parentField?: string };
 
 export interface PromptTemplate {
   prompt: string;
@@ -162,67 +162,12 @@ export interface LLMGenerationSpec {
   id: string;
   target: GenerationTarget;
   prompt: PromptBuilder.Types.UniversalPrompt;
+  parentDomain?: string;
 
   mapFields: {
     [targetField: string]: FieldMapping;
   };
 }
-
-// === Generation LLM Support ===
-
-// export type SpecDisplayOptions = {
-//   list: {
-//     header?: {
-//       title?: string;
-//       subtitle?: string;
-//       icon?: string; // e.g., material-icon or URL
-//       showSearch?: boolean;
-//       filters?: Array<{
-//         field: string;
-//         type: "text" | "select" | "date";
-//         label?: string;
-//         optionsLookupKey?: string;
-//       }>;
-//       actions?: Array<{
-//         type: "button" | "link";
-//         label: string;
-//         icon?: string;
-//         action: "create" | "export" | string; // supports custom actions
-//         visibleIf?: string; // optional expression string or condition
-//       }>;
-//     };
-//     options?: {
-//       showSelectOnRight?: boolean
-//     };
-//     fields: Array<{
-//       key: string;
-//       format?: "date" | "title" | "summary" | "html" | "tags" | "boolean";
-//       collapse?: boolean;
-//     }>;
-//     rowActions?: Array<{
-//       type: "icon" | "button";
-//       icon?: string;
-//       label?: string;
-//       action: "edit" | "delete" | "view" | string;
-//       confirm?: boolean;
-//       visibleIf?: string;
-//     }>;
-//   };
-//   item: {
-//     header?: {
-//       title?: string;
-//       subtitle?: string;
-//       actions?: Array<{
-//         type: "button" | "link";
-//         label: string;
-//         action: "edit" | "delete" | "custom";
-//         icon?: string;
-//         confirm?: boolean;
-//         visibleIf?: string;
-//       }>;
-//     };
-//   };
-// }
 
 export type SpecDefinition = {
   fields: {
