@@ -57,7 +57,7 @@ export interface FormFieldSchema {
 export interface FormAction {
     label: string;
     type: "save" | "reset" | "cancel" | "delete" | "generate" | "custom";
-    icon?: string;
+    icon?: any;
 
     generation?: {
         id: string;
@@ -72,22 +72,13 @@ export interface FormSchema {
         actions?: FormAction[];
     };
     fields: FormFieldSchema[];
-    children?: {
-        domain: string;
-        field: { parent: string; child: string };
-        listSchema: ListSchema;
-    }[]
-}
-
-export interface ListSchema {
-    header?: {
-        title?: { type: "static" | "dynamic", field?: string, value?: string };
-        subtitle?: { type: "static" | "dynamic", field?: string, value?: string };
-        actions?: FormAction[];
-    };
     actions?: {
         primaryMenu?: FormAction[],
         contextMenu?: FormAction[]
-    }
-    fields: FormFieldSchema[];
+    },
+    children?: {
+        domain: string;
+        field: { parent: string; child: string };
+        formSchemaId: string;
+    }[]
 }
