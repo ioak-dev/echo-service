@@ -83,7 +83,7 @@ export interface ListSchema {
     header?: {
         title?: { type: "static" | "dynamic", field?: string, value?: string };
         subtitle?: { type: "static" | "dynamic", field?: string, value?: string };
-        actionMap?: { singleSelect?: FormAction[], multiSelect?: FormAction[], noneSelect?: FormAction[] };
+        actions?: FormAction[];
     };
     actions?: {
         primaryMenu?: FormAction[],
