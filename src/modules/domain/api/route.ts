@@ -9,7 +9,8 @@ import {
   patch,
   search,
   update,
-  generate
+  generate,
+  getVersionHistory
 } from "./service";
 import { authorizeApi } from "../../../middlewares";
 import { getUiMeta } from "./uiService";
@@ -50,6 +51,10 @@ module.exports = function (router: any) {
     .put(authorizeApi, transformDomain, update)
     .patch(authorizeApi, transformDomain, patch)
     .delete(authorizeApi, transformDomain, deleteOne);
+
+  router
+    .route("/resources/:space/:domain/:reference/version")
+    .get(authorizeApi, transformDomain, getVersionHistory)
 
   router.post("/resources/:space/:domain/search", authorizeApi, transformDomain, search);
 

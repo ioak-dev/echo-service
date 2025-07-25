@@ -11,6 +11,7 @@ import { populateTagFields, preprocessTagFields } from "./tagUtils";
 import { createDocument } from "./createHelper";
 import { getAiSpec } from "../specs/aiSpecRegistry";
 import { GenerationSpec } from "../specs/types/aispec.types";
+import { deleteAllVersions, handleVersioning } from "./versioningHelper";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
@@ -153,6 +154,36 @@ export const getMeta = async (req: Request, res: Response) => {
   res.json(meta);
 };
 
+export const getVersionHistory = async (req: Request, res: Response) => {
+  const { space, domain, reference } = req.params;
+
+  const spec = getSpecByName(domain);
+  if (!spec) {
+    return res.status(404).json({ error: `Domain (${domain}) does not exist` });
+  }
+
+  const MainModel = getCollectionByName(space, domain);
+  const mainDoc = await MainModel.findOne({ reference });
+  if (!mainDoc) {
+    return res.status(404).json({ error: `Reference (${reference}) not found in domain (${domain})` });
+  }
+
+  const versionMeta = spec?.meta?.versioning;
+  if (!versionMeta) {
+    return res.status(400).json({ error: `Versioning is not enabled for domain: ${domain}` });
+  }
+
+  const VersionModel = getCollectionByName(space, versionMeta.domain);
+  const referenceField = versionMeta.reference || "parentReference";
+
+  const versions = await VersionModel.find({ [referenceField]: reference })
+    .sort({ createdAt: -1 })
+    .select('__version __columns __percentage reference createdAt createdBy updatedAt updatedBy ')
+    .lean();
+
+  res.json(versions);
+};
+
 export const search = async (req: Request, res: Response) => {
   const { space, domain } = req.params;
 
@@ -199,12 +230,36 @@ export const search = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getOne = async (req: Request, res: Response) => {
   const { space, domain, reference } = req.params;
+  const { version } = req.query;
 
   const spec = getSpecByName(domain);
   if (!spec) return res.status(404).json({ error: `Domain (${domain}) does not exists` });
+
+  if (version) {
+    const versionMeta = spec?.meta?.versioning;
+    if (!versionMeta) {
+      return res.status(400).json({ error: `Versioning not enabled for domain ${domain}` });
+    }
+
+    const VersionModel = getCollectionByName(space, versionMeta.domain);
+    const referenceField = versionMeta.reference || "parentReference";
+
+    const versionedDoc = await VersionModel.findOne({
+      [referenceField]: reference,
+      __version: version,
+    });
+
+    if (!versionedDoc) {
+      return res.status(404).json({ error: `Version ${version} not found for reference ${reference}` });
+    }
+
+    const filled = fillMissingFields(versionedDoc.toObject(), spec);
+    const shaped = await applyShapeResponse(filled, spec, { space, domain, operation: "getOne" });
+
+    return res.json(shaped);
+  }
 
   const Model = getCollectionByName(space, domain);
   const doc = await Model.findOne({ reference });
@@ -222,6 +277,18 @@ export const create = async (req: Request, res: Response) => {
 
   try {
     const result = await createDocument({ space, domain, payload, userId });
+    const newVersion = await handleVersioning({ space, domain, doc: result });
+
+    if (newVersion) {
+      const Model = getCollectionByName(space, domain);
+      await Model.updateOne(
+        { _id: result._id },
+        { $set: { __version: newVersion } }
+      );
+
+      result.__version = newVersion;
+    }
+
     res.status(201).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -273,8 +340,22 @@ export const patch = async (req: Request, res: Response) => {
 
   await preprocessTagFields(shapedData, spec, space);
 
+  const prevDoc = await Model.findOne({ reference });
+
   const updated = await Model.findOneAndUpdate({ reference }, { $set: shapedData }, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
+
+
+  const newVersion = await handleVersioning({
+    space,
+    domain,
+    doc: updated.toObject(),
+    prevDoc: prevDoc?.toObject(),
+  });
+
+  if (newVersion) {
+    await Model.updateOne({ reference }, { __version: newVersion });
+  }
 
   const shapedDoc = fillMissingFields(updated.toObject(), spec);
 
@@ -335,8 +416,21 @@ export const update = async (req: Request, res: Response) => {
   }
   await preprocessTagFields(shapedData, spec, space);
 
+  const prevDoc = await Model.findOne({ reference });
+
   const updated = await Model.findOneAndUpdate({ reference }, shapedData, { new: true });
   if (!updated) return res.status(404).json({ error: "Not found" });
+
+  const newVersion = await handleVersioning({
+    space,
+    domain,
+    doc: updated.toObject(),
+    prevDoc: prevDoc?.toObject(),
+  });
+
+  if (newVersion) {
+    await Model.updateOne({ reference }, { __version: newVersion });
+  }
 
   const shapedDoc = fillMissingFields(updated.toObject(), spec);
   let shaped: any = null;
@@ -391,6 +485,7 @@ export const deleteOne = async (req: Request, res: Response) => {
   }
 
   await Model.deleteOne({ reference });
+  await deleteAllVersions({ space, domain, reference });
   res.status(204).send();
 };
 
@@ -404,8 +499,6 @@ export const generate = async (req: Request, res: Response) => {
   const payload = req.body;
 
   const { reference, parentReference }: GenerateQueryType = req.query;
-
-  console.log(generationId, reference, parentReference, payload);
 
   if (!generationId) {
     return res.status(400).json({ error: 'Missing generationId in payload' });
@@ -435,8 +528,6 @@ export const generate = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Generation failed', details: err.message });
   }
 };
-
-
 
 export const inferTypes = (req: Request, res: Response) => {
   try {

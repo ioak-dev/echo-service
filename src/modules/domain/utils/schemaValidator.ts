@@ -190,6 +190,7 @@ export const fillMissingFields = (
 ): any => {
   const shaped: any = {
     id: doc._id ?? doc.id,
+    __version: doc.__version,
     reference: doc.reference,
     createdBy: doc.createdBy,
     createdAt: doc.createdAt,

@@ -182,36 +182,9 @@ export type SpecDefinition = {
     }[];
     ordering?: string[];
     generation?: LLMGenerationSpec[];
+    versioning?: {
+      domain: string;
+      reference: string; // name of the column in child table that will reference the parent
+    }
   };
 };
-
-
-
-// UI types
-
-export interface OptionsObjectType {
-  name: string | number;
-  value: string;
-}
-export interface DynamicFormProps {
-  data: any;
-  metadata: SpecDefinition;
-  optionsLookupDictionary: { [key: string]: OptionsObjectType[] }
-  onChange: (name: string, value: any) => void;
-  onSubmit?: (formData: FormData) => void;
-  editMode?: boolean;
-  editor?: any;
-  className?: string;
-}
-
-
-export interface ValidationResult {
-  valid: boolean;
-  errors: Record<string, string>;
-}
-
-export interface DynamicFormHandle {
-  submit: () => void;
-  reset: () => void;
-  validate: () => ValidationResult;
-}
