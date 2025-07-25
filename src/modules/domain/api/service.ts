@@ -8,11 +8,11 @@ import { buildQueryFromAdvancedFilters, buildSortQuery } from "../filterBuilder"
 import { generateTypesFromSpecs } from "../utils/typeInference";
 import * as LlmHelper from './aiHelper';
 import { populateTagFields, preprocessTagFields } from "./tagUtils";
-import { createDocument } from "./createHelper";
+import { createDocument, patchDocument, updateDocument } from "./createHelper";
 import { getAiSpec } from "../specs/aiSpecRegistry";
 import { GenerationSpec } from "../specs/types/aispec.types";
 import { deleteAllVersions, handleVersioning } from "./versioningHelper";
-import {LlmRunner} from "aihub";
+import { LlmRunner } from "aihub";
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 const config = require("../../../../env");
@@ -277,99 +277,21 @@ export const create = async (req: Request, res: Response) => {
 
   try {
     const result = await createDocument({ space, domain, payload, userId });
-    const newVersion = await handleVersioning({ space, domain, doc: result });
-
-    if (newVersion) {
-      const Model = getCollectionByName(space, domain);
-      await Model.updateOne(
-        { _id: result._id },
-        { $set: { __version: newVersion } }
-      );
-
-      result.__version = newVersion;
-    }
-
     res.status(201).json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 };
-
 export const patch = async (req: Request, res: Response) => {
   const { space, domain, reference } = req.params;
   const payload = req.body;
   const userId = req.user?.user_id;
 
-  const spec = getSpecByName(domain);
-  if (!spec) return res.status(404).json({ error: `Domain (${domain}) does not exists` });
-
-  const { valid, shapedData: shapedDataOriginal, errors } = validateAndShapePayload(payload, spec, "", { allowPartial: true });
-
-  if (!valid) return res.status(400).json({ error: "Validation failed", details: errors });
-
-  let shapedData = shapedDataOriginal;
-
-  const hooks = spec.meta?.hooks;
-  if (hooks?.beforePatch) {
-    let hookResponse = await hooks.beforePatch(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
-    if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
-    shapedData = hookResponse.doc;
-  }
-
-  const ok = await checkParentReferences(shapedData, spec, space, res);
-  if (!ok) return;
-
-  const Model = getCollectionByName(space, domain);
-
-  if (spec.meta?.ordering?.length && shapedData.order !== undefined) {
-    const oldDoc = await Model.findOne({ reference });
-    const oldOrder = oldDoc?.order;
-    const newOrder = shapedData.order;
-
-    if (newOrder !== oldOrder) {
-      const groupFilter: any = {};
-      for (const field of spec.meta.ordering) {
-        groupFilter[field] = oldDoc[field];
-      }
-
-      await reorderWithinGroup(Model, reference, groupFilter, oldOrder, newOrder);
-
-      delete shapedData.order;
-    }
-  }
-
-  await preprocessTagFields(shapedData, spec, space);
-
-  const prevDoc = await Model.findOne({ reference });
-
-  const updated = await Model.findOneAndUpdate({ reference }, { $set: shapedData }, { new: true });
-  if (!updated) return res.status(404).json({ error: "Not found" });
-
-
-  const newVersion = await handleVersioning({
-    space,
-    domain,
-    doc: updated.toObject(),
-    prevDoc: prevDoc?.toObject(),
-  });
-
-  if (newVersion) {
-    await Model.updateOne({ reference }, { __version: newVersion });
-  }
-
-  const shapedDoc = fillMissingFields(updated.toObject(), spec);
-
-  let shaped: any = null;
   try {
-    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
-  } catch (err) {
-    console.error("shapeResponse error:", err);
-  }
-  res.status(201).json(shaped);
-
-
-  if (hooks?.afterPatch) {
-    hooks.afterPatch(updated.toObject(), { space, domain, operation: "patch", payload, userId }).catch(console.error);
+    const result = await patchDocument({ space, domain, reference, payload, userId });
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
@@ -378,72 +300,11 @@ export const update = async (req: Request, res: Response) => {
   const payload = req.body;
   const userId = req.user?.user_id;
 
-  const spec = getSpecByName(domain);
-  if (!spec) return res.status(404).json({ error: `Domain (${domain}) does not exists` });
-
-  const { valid, shapedData: shapedDataOriginal, errors } = validateAndShapePayload(payload, spec);
-  console.log("-", shapedDataOriginal);
-  let shapedData = shapedDataOriginal;
-  const hooks = spec.meta?.hooks;
-  if (hooks?.beforeUpdate) {
-    let hookResponse = await hooks.beforeUpdate(shapedDataOriginal, { space, domain, operation: "create", payload, userId });
-    if (hookResponse.errors.length > 0) return res.status(400).json({ error: "Validation failed", details: hookResponse.errors });
-    shapedData = hookResponse.doc;
-  }
-
-  if (!valid) return res.status(400).json({ error: "Validation failed", details: errors });
-
-  const ok = await checkParentReferences(shapedData, spec, space, res);
-  if (!ok) return;
-
-  const Model = getCollectionByName(space, domain);
-
-  if (spec.meta?.ordering?.length && shapedData.order !== undefined) {
-    const oldDoc = await Model.findOne({ reference });
-    const oldOrder = oldDoc?.order;
-    const newOrder = shapedData.order;
-
-    if (newOrder !== oldOrder) {
-      const groupFilter: any = {};
-      for (const field of spec.meta.ordering) {
-        groupFilter[field] = oldDoc[field];
-      }
-
-      await reorderWithinGroup(Model, reference, groupFilter, oldOrder, newOrder);
-
-      delete shapedData.order;
-    }
-  }
-  await preprocessTagFields(shapedData, spec, space);
-
-  const prevDoc = await Model.findOne({ reference });
-
-  const updated = await Model.findOneAndUpdate({ reference }, shapedData, { new: true });
-  if (!updated) return res.status(404).json({ error: "Not found" });
-
-  const newVersion = await handleVersioning({
-    space,
-    domain,
-    doc: updated.toObject(),
-    prevDoc: prevDoc?.toObject(),
-  });
-
-  if (newVersion) {
-    await Model.updateOne({ reference }, { __version: newVersion });
-  }
-
-  const shapedDoc = fillMissingFields(updated.toObject(), spec);
-  let shaped: any = null;
   try {
-    shaped = await applyShapeResponse(shapedDoc, spec, { space, domain, operation: "create", userId });
-  } catch (err) {
-    console.error("shapeResponse error:", err);
-  }
-  res.status(201).json(shaped);
-
-
-  if (hooks?.afterUpdate) {
-    hooks.afterUpdate(updated.toObject(), { space, domain, operation: "update", payload, userId }).catch(console.error);
+    const result = await updateDocument({ space, domain, reference, payload, userId });
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
@@ -492,13 +353,14 @@ export const deleteOne = async (req: Request, res: Response) => {
 interface GenerateQueryType {
   reference?: string;
   parentReference?: string;
+  parentVersion?: string;
 }
 
 export const generate = async (req: Request, res: Response) => {
   const { space, generationId } = req.params;
   const payload = req.body;
 
-  const { reference, parentReference }: GenerateQueryType = req.query;
+  const { reference, parentReference, parentVersion }: GenerateQueryType = req.query;
 
   if (!generationId) {
     return res.status(400).json({ error: 'Missing generationId in payload' });
@@ -520,6 +382,7 @@ export const generate = async (req: Request, res: Response) => {
       spec,
       reference,
       parentReference,
+      parentVersion,
       payload
     });
     res.status(200).json({ data: result });
@@ -540,7 +403,7 @@ export const inferTypes = (req: Request, res: Response) => {
 };
 
 export const chat = async (req: Request, res: Response) => {
-  const payload: any [] = req.body.messages;
+  const payload: any[] = req.body.messages;
   try {
     const messages = [
       {
@@ -549,12 +412,12 @@ export const chat = async (req: Request, res: Response) => {
       },
       ...payload
     ];
-    const streamResponse =  await LlmRunner.runner.chatgpt.stream(
-        config.CHATGPT_API_KEY,
-        "/v1/chat/completions",
-        messages
+    const streamResponse = await LlmRunner.runner.chatgpt.stream(
+      config.CHATGPT_API_KEY,
+      "/v1/chat/completions",
+      messages
     )
-    res.setHeader('Content-Type','text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream');
     streamResponse.pipe(res);
   } catch (err: any) {
     console.error('Generation error:', err);

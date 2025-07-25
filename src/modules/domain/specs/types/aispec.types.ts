@@ -2,7 +2,7 @@ import { PromptBuilder } from 'aihub';
 
 export type GenerationTarget =
   | { type: "fields"; }
-  | { type: "childRecords"; domain: string; parentField: string };
+  | { type: "childRecords"; domain: string; };
 
 export interface PromptTemplate {
   prompt: string;

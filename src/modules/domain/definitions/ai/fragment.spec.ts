@@ -33,13 +33,13 @@ const fragmentInsight: GenerationSpec = {
   target: {
     domain: "fragmentInsight",
     type: "childRecords",
-    parentField: "fragmentReference"
   },
   mapFields: {
     "response": { source: "llm", path: "content" },
-    "mode": { source: "input", path: "mode" },
-    "userInput": { source: "input", path: "userInput" },
-    "fragmentVersionReference": { source: "static", value: "1dZTE0xK" }
+    "mode": { source: "parent", path: "payload.mode" },
+    "userInput": { source: "parent", path: "payload.userInput" },
+    "fragmentVersion": { source: "parent", path: "fragment.__version" },
+    "fragmentReference": { source: "parent", path: "params.parentReference" }
   },
   prompt: {
     systemMessages: ['You are a creative writing companion that helps interpret raw story fragments. Interpretations are symbolic, speculative, and intuitive—not editorial. Output must be valid JSON:\n{\n  \"content\": string\n}'],

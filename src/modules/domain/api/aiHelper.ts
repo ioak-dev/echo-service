@@ -1,9 +1,10 @@
 import { LlmRunner, PromptBuilder, PromptUtils } from "aihub";
 import { FieldMapping, LLMGenerationSpec, PromptTemplate } from "../specs/types/spec.types";
 import { getCollectionByName } from "../../../lib/dbutils";
-import { createDocument } from "./createHelper";
+import { createDocument, patchDocument, updateDocument } from "./createHelper";
 import { map } from "lodash";
 import { GenerationSpec } from "../specs/types/aispec.types";
+import { getSpecByName } from "../specs/specRegistry";
 
 
 const config = require("../../../../env");
@@ -14,45 +15,39 @@ async function updateRecordField(
   reference: string,
   payload: any
 ): Promise<void> {
-  const Model = getCollectionByName(space, domain);
-
-  const result = await Model.updateOne({ reference }, { $set: payload });
-
-  if (result.matchedCount === 0) {
-    throw new Error(`No record found to update with reference ${reference} in ${domain}`);
-  }
+  await patchDocument({
+    space,
+    domain,
+    reference,
+    payload
+  });
 }
+
 async function createChildRecords(params: {
   space: string,
   domain: string,
   parentReference: string,
-  parentField: string,
   data: any,
 }
 ): Promise<void> {
   const records = Array.isArray(params.data) ? params.data : [params.data];
 
   for (const record of records) {
-    const enrichedRecord = {
-      [params.parentField]: params.parentReference,
-      ...record,
-    };
-
     if (record.reference) {
       try {
-        await updateRecordField(params.space, params.domain, record.reference, enrichedRecord);
+        await updateRecordField(params.space, params.domain, record.reference, record);
       } catch (err) {
         await createDocument({
           space: params.space,
           domain: params.domain,
-          payload: enrichedRecord,
+          payload: record,
         });
       }
     } else {
       await createDocument({
         space: params.space,
         domain: params.domain,
-        payload: enrichedRecord,
+        payload: record,
         skipBeforeCreateHook: true
       });
     }
@@ -64,6 +59,7 @@ export const runGeneration = async (params: {
   spec: GenerationSpec,
   reference?: string,
   parentReference?: string,
+  parentVersion?: string,
   payload: any
 }
 ) => {
@@ -78,20 +74,39 @@ export const runGeneration = async (params: {
     }
   }
 
+
   let parentRecord = {};
 
   if (params.spec.parentDomain && params.parentReference) {
-    const ParentModel = getCollectionByName(params.space, params.spec.parentDomain);
-    parentRecord = await ParentModel.findOne({ reference: params.parentReference });
+    const spec = getSpecByName(params.spec.parentDomain);
+    if (!spec) {
+      throw new Error(`Parent domain (${params.spec.parentDomain}) not found`);
+    }
+    let ParentModel = getCollectionByName(params.space, params.spec.parentDomain);
+
+    if (spec.meta?.versioning && params.parentVersion) {
+      ParentModel = getCollectionByName(params.space, spec.meta.versioning.domain);
+
+      const versionRefField = spec.meta.versioning.reference || "parentReference";
+      parentRecord = await ParentModel.findOne({
+        [versionRefField]: params.parentReference,
+        __version: params.parentVersion,
+      });
+    } else {
+      parentRecord = await ParentModel.findOne({ reference: params.parentReference });
+    }
 
     if (!parentRecord) {
-      throw new Error(`Parent record with reference (${params.parentReference}) not found in domain (${params.spec.parentDomain})`);
+      throw new Error(`Parent record with reference (${params.parentReference})${params.parentVersion ? ` and version (${params.parentVersion})` : ""} not found in domain (${params.spec.parentDomain})`);
     }
   }
 
   const contextData = {
     [params.spec.domain]: baseRecord,
-    payload: params.payload
+    payload: params.payload,
+    params: {
+      reference: params.reference, parentReference: params.parentReference, parentVersion: params.parentVersion
+    }
   }
 
   if (params.spec.parentDomain) {
@@ -108,7 +123,15 @@ export const runGeneration = async (params: {
     "object"
   );
 
-  const mappedOutput = applyPostProcessing(llmOutput.responseObject, params.spec.mapFields, baseRecord, params.payload);
+  console.log(llmOutput);
+
+  const mappedOutput = applyPostProcessing(
+    llmOutput.responseObject,
+    params.spec.mapFields,
+    contextData,
+    params.payload);
+
+  console.log(mappedOutput);
 
   if (params.spec.target.type === "fields" && params.reference) {
     await updateRecordField(params.space, params.spec.domain, params.reference, mappedOutput);
@@ -116,7 +139,6 @@ export const runGeneration = async (params: {
     await createChildRecords({
       space: params.space,
       domain: params.spec.target.domain,
-      parentField: params.spec.target.parentField,
       parentReference: params.parentReference,
       data: mappedOutput
     });
@@ -132,7 +154,7 @@ function getValueByPath(obj: any, path: string): any {
 function applyPostProcessing(
   llmOutput: any,
   mapFields: { [targetField: string]: FieldMapping },
-  parentData: any,
+  contextData: any,
   inputPayload: any
 ): Record<string, any> {
   const result: Record<string, any> = {};
@@ -145,7 +167,7 @@ function applyPostProcessing(
         value = mapping.path ? getValueByPath(llmOutput, mapping.path) : "";
         break;
       case "parent":
-        value = mapping.path ? getValueByPath(parentData, mapping.path) : "";
+        value = mapping.path ? getValueByPath(contextData, mapping.path) : "";
         break;
       case "input":
         value = mapping.path ? getValueByPath(inputPayload, mapping.path) : "";

@@ -7,28 +7,6 @@ const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
 
 export const fragmentInsightSpec: SpecDefinition = {
-    // displayOptions: {
-    //     list: {
-    //         header: { title: "Insights" },
-    //         fields: [
-    //             {
-    //                 key: "userInput",
-    //                 format: "title"
-    //             },
-    //             {
-    //                 key: "mode",
-    //                 format: "title"
-    //             },
-    //             {
-    //                 key: "response.content",
-    //                 format: "summary",
-    //                 collapse: true
-    //             }
-    //         ]
-    //     },
-    //     item: {
-    //     }
-    // },
     fields: {
         "fragmentReference": {
             "type": "string",
@@ -38,12 +16,12 @@ export const fragmentInsightSpec: SpecDefinition = {
                 field: "reference"
             }
         },
-        "fragmentVersionReference": {
+        "fragmentVersion": {
             "type": "string",
             "required": true,
             parent: {
                 domain: "fragmentVersion",
-                field: "reference"
+                field: "__version"
             }
         },
         "mode": {
@@ -79,28 +57,6 @@ export const fragmentInsightSpec: SpecDefinition = {
         versioning: {
             domain: "fragmentInsightVersion",
             reference: "fragmentInsightReference"
-        },
-        hooks: {
-            beforeCreate: async (doc, context) => {
-                const output = await interpret({
-                    mode: doc.mode,
-                    content: context.payload.fragment.content,
-                    userInput: doc.userInput
-                })
-                doc.response = output.responseObject;
-                return { doc, errors: [] }
-            },
-            beforePatch: async (doc, context) => {
-                const output = await interpret({
-                    mode: doc.mode,
-                    content: context.payload.fragment.content,
-                    userInput: doc.userInput,
-                    response: context.payload.fragmentInsight.response
-                })
-                doc.response = output.responseObject;
-                doc.fragmentVersionReference = context.payload.fragmentVersionReference;
-                return { doc, errors: [] }
-            },
         },
     },
 };
