@@ -10,7 +10,7 @@ import {
   search,
   update,
   generate,
-  getVersionHistory
+  getVersionHistory, chat
 } from "./service";
 import { authorizeApi } from "../../../middlewares";
 import { getUiMeta } from "./uiService";
@@ -61,4 +61,7 @@ module.exports = function (router: any) {
   router.post("/resources-ai/:space/generate/:generationId", authorizeApi, transformDomain, generate);
 
   router.get("/inference/resources", inferTypes);
+
+  router.post("/resources-ai/:space/chat", authorizeApi, transformDomain, chat);
+
 }

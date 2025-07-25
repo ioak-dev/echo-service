@@ -12,10 +12,10 @@ import { createDocument } from "./createHelper";
 import { getAiSpec } from "../specs/aiSpecRegistry";
 import { GenerationSpec } from "../specs/types/aispec.types";
 import { deleteAllVersions, handleVersioning } from "./versioningHelper";
-
+import {LlmRunner} from "aihub";
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);
-
+const config = require("../../../../env");
 export const applyShapeResponse = async (
   doc: any,
   spec: SpecDefinition,
@@ -539,3 +539,25 @@ export const inferTypes = (req: Request, res: Response) => {
   }
 };
 
+export const chat = async (req: Request, res: Response) => {
+  const payload: any [] = req.body.messages;
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: "You are an expert assistant helping users fill out the form fields. Only respond with suggestions related to the field only without going off topic"
+      },
+      ...payload
+    ];
+    const streamResponse =  await LlmRunner.runner.chatgpt.stream(
+        config.CHATGPT_API_KEY,
+        "/v1/chat/completions",
+        messages
+    )
+    res.setHeader('Content-Type','text/event-stream');
+    streamResponse.pipe(res);
+  } catch (err: any) {
+    console.error('Generation error:', err);
+    res.status(500).json({ error: 'Generation failed', details: err.message });
+  }
+};
