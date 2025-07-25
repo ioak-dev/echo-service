@@ -71,6 +71,7 @@ export interface FormSchema {
         subtitle?: { type: "static" | "dynamic", field?: string, value?: string };
         actions?: FormAction[];
     };
+    versioning?: boolean;
     fields: FormFieldSchema[];
     actions?: {
         primaryMenu?: FormAction[],
@@ -81,4 +82,17 @@ export interface FormSchema {
         field: { parent: string; child: string };
         formSchemaId: string;
     }[]
+}
+
+// common types
+export interface DomainVersion {
+    _id: string;
+    __version: string;
+    __columns: Record<string, number>;
+    __percentage: number;
+    reference: string;
+    updatedBy: string;
+    updatedAt: Date
+    createdBy: string;
+    createdAt: Date;
 }

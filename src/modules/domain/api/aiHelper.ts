@@ -101,8 +101,6 @@ export const runGeneration = async (params: {
   const prompt = PromptUtils.replacePlaceholders(params.spec.prompt, contextData);
   const chatgptPrompt = PromptBuilder.adapters.chatgpt.convert(prompt);
 
-  console.log(chatgptPrompt);
-
   const llmOutput = await LlmRunner.runner.chatgpt.predict(
     config.CHATGPT_API_KEY,
     "/v1/chat/completions",
@@ -110,11 +108,7 @@ export const runGeneration = async (params: {
     "object"
   );
 
-  console.log(llmOutput);
-
-
   const mappedOutput = applyPostProcessing(llmOutput.responseObject, params.spec.mapFields, baseRecord, params.payload);
-  console.log(mappedOutput)
 
   if (params.spec.target.type === "fields" && params.reference) {
     await updateRecordField(params.space, params.spec.domain, params.reference, mappedOutput);
@@ -141,7 +135,6 @@ function applyPostProcessing(
   parentData: any,
   inputPayload: any
 ): Record<string, any> {
-  console.log(llmOutput)
   const result: Record<string, any> = {};
 
   for (const [targetField, mapping] of Object.entries(mapFields)) {

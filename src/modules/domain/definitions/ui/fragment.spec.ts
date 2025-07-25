@@ -22,6 +22,7 @@ const defaultSchema: FormSchema = {
             },
         ]
     },
+    versioning: true,
     fields: [
         {
             name: 'name',

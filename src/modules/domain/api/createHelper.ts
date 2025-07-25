@@ -55,7 +55,7 @@ export const createDocument = async ({
   }
 
   const ok = await checkParentReferences(shapedData, spec, space, {
-    status: () => ({ json: () => { } }) // Dummy res to satisfy the function
+    status: () => ({ json: () => { } })
   } as any);
   if (!ok) {
     throw new Error("Parent reference check failed");
