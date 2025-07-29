@@ -403,7 +403,7 @@ export const inferTypes = (req: Request, res: Response) => {
 };
 
 export const chat = async (req: Request, res: Response) => {
-  const payload: any[] = req.body.messages;
+  const payload: any[] = req.body;
   try {
     const messages = [
       {

@@ -28,25 +28,28 @@ const defaultSchema: FormSchema = {
             name: 'name',
             type: 'text',
             label: "Title",
-            conversationalPrompt: 'What would you like to title this fragment?',
+            conversationalPrompt: { title: 'What would you like to title this fragment?' },
         },
         {
             name: 'content',
             type: 'text',
             label: "Content",
-            conversationalPrompt: 'Can you describe it briefly?',
+            conversationalPrompt: { title: 'Can you describe it briefly?' },
+            assistant: {
+                id: "assistant-fragment-content"
+            }
         },
         {
             name: 'summary',
             type: 'text',
             label: "Summary",
-            conversationalPrompt: 'Auto generated content',
+            conversationalPrompt: { title: 'Auto generated content' },
         },
         {
             name: 'labels',
             type: 'tag',
             label: "Labels",
-            conversationalPrompt: 'Any labels to tag this with?',
+            conversationalPrompt: { title: 'Any labels to tag this with?' },
         },
     ],
     children: [

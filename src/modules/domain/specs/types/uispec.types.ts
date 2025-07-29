@@ -50,13 +50,19 @@ export interface FormFieldSchema {
         value?: any
     }[],
 
-    conversationalPrompt?: string;
+    conversationalPrompt?: {
+        title: string;
+        subtitle?: string;
+    };
     fields?: FormFieldSchema[];
+    assistant?: {
+        id: string;
+    }
 }
 
 export interface FormAction {
     label: string;
-    type: "save" | "reset" | "cancel" | "delete" | "generate" | "custom";
+    type: "save" | "reset" | "cancel" | "delete" | "generate" | "version" | "custom";
     icon?: any;
 
     generation?: {

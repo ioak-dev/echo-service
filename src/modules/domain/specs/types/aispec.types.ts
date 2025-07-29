@@ -25,3 +25,10 @@ export interface GenerationSpec {
     [targetField: string]: FieldMapping;
   };
 }
+
+export interface AssistantSpec {
+  systemPrompt: any;
+  minLength?: number;
+  maxLength?: number;
+  html?: boolean;
+}
