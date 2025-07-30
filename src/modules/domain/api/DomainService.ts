@@ -357,6 +357,7 @@ interface GenerateQueryType {
 }
 
 export const generate = async (req: Request, res: Response) => {
+  const token = req.token;
   const { space, generationId } = req.params;
   const payload = req.body;
 
@@ -378,6 +379,7 @@ export const generate = async (req: Request, res: Response) => {
 
   try {
     const result = await LlmHelper.runGeneration({
+      token: token || "",
       space,
       spec,
       reference,

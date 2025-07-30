@@ -1,11 +1,10 @@
 import { LlmRunner, PromptBuilder, PromptUtils } from "aihub";
-import { FieldMapping, LLMGenerationSpec, PromptTemplate } from "../specs/types/spec.types";
+import { FieldMapping } from "../specs/types/spec.types";
 import { getCollectionByName } from "../../../lib/dbutils";
 import { createDocument, patchDocument, updateDocument } from "./createHelper";
-import { map } from "lodash";
 import { GenerationSpec } from "../specs/types/aispec.types";
 import { getSpecByName } from "../specs/specRegistry";
-
+import * as AihubService from './AihubService';
 
 const config = require("../../../../env");
 
@@ -55,6 +54,7 @@ async function createChildRecords(params: {
 }
 
 export const runGeneration = async (params: {
+  token: string;
   space: string,
   spec: GenerationSpec,
   reference?: string,
@@ -116,22 +116,26 @@ export const runGeneration = async (params: {
   const prompt = PromptUtils.replacePlaceholders(params.spec.prompt, contextData);
   const chatgptPrompt = PromptBuilder.adapters.chatgpt.convert(prompt);
 
-  const llmOutput = await LlmRunner.runner.chatgpt.predict(
-    config.CHATGPT_API_KEY,
-    "/v1/chat/completions",
-    chatgptPrompt,
-    "object"
-  );
+  // const llmOutput = await LlmRunner.runner.chatgpt.predict(
+  //   config.CHATGPT_API_KEY,
+  //   "/v1/chat/completions",
+  //   chatgptPrompt,
+  //   "object"
+  // );
 
-  console.log(llmOutput);
+  const llmOutput = await AihubService.predict(params.space, params.token, {
+    uri: "/v1/chat/completions",
+    provider: "chatgpt",
+    model: "gpt-4o-mini",
+    payload: chatgptPrompt,
+    format: "object",
+  });
 
   const mappedOutput = applyPostProcessing(
-    llmOutput.responseObject,
+    llmOutput.response_object,
     params.spec.mapFields,
     contextData,
     params.payload);
-
-  console.log(mappedOutput);
 
   if (params.spec.target.type === "fields" && params.reference) {
     await updateRecordField(params.space, params.spec.domain, params.reference, mappedOutput);
@@ -158,6 +162,8 @@ function applyPostProcessing(
   inputPayload: any
 ): Record<string, any> {
   const result: Record<string, any> = {};
+
+  console.log(mapFields);
 
   for (const [targetField, mapping] of Object.entries(mapFields)) {
     let value;

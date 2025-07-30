@@ -40,13 +40,6 @@ export const authorizeApi = async (req: any, res: any, next: any) => {
     if (!token) {
       return res.sendStatus(401);
     }
-    // const localData = await decodeAppToken(token);
-    // if (!localData.outcome) {
-    //   return res.sendStatus(401);
-    // }
-    // const localClaims: any = localData.claims;
-    // const space = localClaims.space;
-    // const companyId = localClaims.companyId;
     const data: any = await decodeToken(token);
     if (
       !data.outcome ||
@@ -55,6 +48,7 @@ export const authorizeApi = async (req: any, res: any, next: any) => {
       return res.sendStatus(401);
     }
     req.user = data.claims;
+    req.token = token;
     next();
   } catch (err) {
     console.log(err);

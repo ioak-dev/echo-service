@@ -1,7 +1,5 @@
 import { customAlphabet } from "nanoid";
-import { getCollectionByName } from "../../../../lib/dbutils";
 import { SpecDefinition } from "../../specs/types/spec.types";
-import { interpret } from "./helper/fragmentInsightHelper";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const nanoid = customAlphabet(alphanumericAlphabet, 8);

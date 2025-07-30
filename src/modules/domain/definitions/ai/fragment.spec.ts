@@ -58,7 +58,7 @@ const fragmentInsight: GenerationSpec = {
     assistantMessages: [],
     variables: ['content'],
     responseType: 'json',
-    responseFormat: { text: 'string' }
+    responseFormat: { content: 'string' }
   }
 };
 

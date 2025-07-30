@@ -10,8 +10,11 @@ import {
   search,
   update,
   generate,
-  getVersionHistory, chat
-} from "./service";
+  getVersionHistory
+} from "./DomainService";
+import {
+  chat
+} from './AihubService';
 import { authorizeApi } from "../../../middlewares";
 import { getUiMeta } from "./uiService";
 

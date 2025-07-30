@@ -8,6 +8,7 @@ declare global {
     }
 
     interface Request {
+      token?: string;
       user?: User;
     }
   }

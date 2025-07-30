@@ -3,7 +3,7 @@ import { getSpecByName } from "../specs/specRegistry";
 import { fillMissingFields, validateAndShapePayload } from "../utils/schemaValidator";
 import { preprocessTagFields } from "./tagUtils";
 import { getCollectionByName } from "../../../lib/dbutils";
-import { applyShapeResponse, checkParentReferences } from "./service";
+import { applyShapeResponse, checkParentReferences } from "./DomainService";
 import { handleVersioning } from "./versioningHelper";
 
 const alphanumericAlphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
