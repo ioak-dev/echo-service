@@ -20,12 +20,12 @@ export interface FieldOption {
 }
 
 export interface FieldValidation {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    min?: number;
-    max?: number;
+    required?: { condition: boolean, message?: string };
+    minLength?: { condition: number, message?: string };
+    maxLength?: { condition: number, message?: string };
+    pattern?: { condition: string, message?: string };
+    min?: { condition: number, message?: string };
+    max?: { condition: number, message?: string };
     customValidator?: (value: any) => string | null;
 }
 
