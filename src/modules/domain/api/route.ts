@@ -17,6 +17,7 @@ import {
 } from './AihubService';
 import { authorizeApi } from "../../../middlewares";
 import { getUiMeta } from "./uiService";
+import { ragTest } from "./rag/service";
 
 const router = express.Router();
 // middleware/transformDomain.ts
@@ -66,5 +67,7 @@ module.exports = function (router: any) {
   router.get("/inference/resources", inferTypes);
 
   router.post("/resources-ai/:space/chat/:assistantId", authorizeApi, transformDomain, chat);
+
+  router.post("/resources-ai/:space/rag/:id", authorizeApi, transformDomain, ragTest);
 
 }
