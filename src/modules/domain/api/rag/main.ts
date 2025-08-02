@@ -3,15 +3,17 @@ import { DataTreeSpec } from './types';
 import { getCollectionByName } from '../../../../lib/dbutils';
 
 const buildProjection = (fields: string[]): Record<string, 1 | 0> => {
-    const projection: Record<string, 1> = {};
+    const projection: Record<string, 1 | 0> = {};
     for (const field of fields) {
         projection[field] = 1;
     }
 
-    // 👇 Make sure to exclude everything else explicitly
-    // If you want to allow _id, leave it included
+    if (!fields.includes('_id')) {
+        projection._id = 0;
+    }
     return projection;
 };
+
 
 
 export const buildDataTree = async (
@@ -19,7 +21,7 @@ export const buildDataTree = async (
     spec: DataTreeSpec,
     rootId: string
 ): Promise<any> => {
-    const rootCollection = getCollectionByName(realm, spec.collection);
+    const rootCollection = getCollectionByName(realm, spec.from);
 
     const pipeline = buildPipeline(spec, rootId);
     console.log(JSON.stringify(pipeline, null, 2));
@@ -30,28 +32,23 @@ export const buildDataTree = async (
 const buildPipeline = (spec: DataTreeSpec, rootId: string): any[] => {
     const pipeline: any[] = [];
 
-    // Match the root document
     pipeline.push({ $match: { _id: new mongoose.Types.ObjectId(rootId) } });
 
-    // Project root fields
     if (spec.project) {
         pipeline.push({ $project: buildProjection(spec.project) });
     }
 
-    // Process relationships
     if (spec.relationships) {
         for (const rel of spec.relationships) {
             pipeline.push({
                 $lookup: {
-                    from: rel.from!,
-                    localField: rel.localField!,
-                    foreignField: rel.foreignField!,
-                    as: rel.name,
-                    pipeline: rel.spec ? buildSubPipeline(rel.spec) : [],
+                    from: rel.from,
+                    localField: rel.parentField,
+                    foreignField: rel.childField,
+                    as: rel.as || rel.from,
+                    pipeline: rel ? buildSubPipeline(rel) : [],
                 },
             });
-
-            // DO NOT UNWIND here — keep as array (one-to-many)
         }
     }
 
@@ -69,11 +66,11 @@ const buildSubPipeline = (spec: DataTreeSpec): any[] => {
         for (const rel of spec.relationships) {
             pipeline.push({
                 $lookup: {
-                    from: rel.from!,
-                    localField: rel.localField!,
-                    foreignField: rel.foreignField!,
-                    as: rel.name,
-                    pipeline: rel.spec ? buildSubPipeline(rel.spec) : [],
+                    from: rel.from,
+                    localField: rel.parentField,
+                    foreignField: rel.childField,
+                    as: rel.as || rel.from,
+                    pipeline: rel ? buildSubPipeline(rel) : [],
                 },
             });
 
@@ -88,9 +85,8 @@ export const buildAllDataTrees = async (
     realm: string,
     spec: DataTreeSpec
 ): Promise<any[]> => {
-    const rootCollection = getCollectionByName(realm, spec.collection);
+    const rootCollection = getCollectionByName(realm, spec.from);
 
-    // Load all root IDs (project only _id for efficiency)
     const rootDocs = await rootCollection.find({}, { _id: 1 }).lean().exec();
     const rootIds = rootDocs.map((doc: any) => doc._id);
 

@@ -1,84 +1,66 @@
 import { DataTreeSpec } from "./types";
 
 export const universityDataTreeSpec: DataTreeSpec = {
-  collection: 'students',
+  from: 'students',
   project: ['_id', 'name', 'studentId', 'major', 'createdAt'],
   relationships: [
     {
-      name: 'enrollments',
+      as: 'enrollments',
       from: 'enrollments',
-      localField: '_id',
-      foreignField: 'studentId',
-      spec: {
-        collection: 'enrollments',
-        project: ['_id', 'courseId', 'enrolledAt', 'studentId'],
-        relationships: [
-          {
-            name: 'course',
-            from: 'courses',
-            localField: 'courseId',
-            foreignField: '_id',
-            spec: {
-              collection: 'courses',
-              project: ['_id', 'title', 'code', 'credits', 'instructorId', 'createdAt'],
+      parentField: '_id',
+      childField: 'studentId',
+      project: ['_id', 'courseId', 'enrolledAt', 'studentId'],
+      relationships: [
+        {
+          as: 'course',
+          from: 'courses',
+          parentField: 'courseId',
+          childField: '_id',
+          project: ['_id', 'title', 'code', 'credits', 'instructorId', 'createdAt'],
+          relationships: [
+            {
+              as: 'instructor',
+              from: 'users',
+              parentField: 'instructorId',
+              childField: '_id',
+              project: ['_id', 'name', 'email', 'role']
+            },
+            {
+              as: 'assignments',
+              from: 'assignments',
+              parentField: '_id',
+              childField: 'courseId',
+              project: ['_id', 'title', 'dueDate', 'maxPoints'],
               relationships: [
                 {
-                  name: 'instructor',
-                  from: 'users',
-                  localField: 'instructorId',
-                  foreignField: '_id',
-                  spec: {
-                    collection: "users",
-                    project: ['_id', 'name', 'email', 'role']
-                  }
-                },
-                {
-                  name: 'assignments',
-                  from: 'assignments',
-                  localField: '_id',
-                  foreignField: 'courseId',
-                  spec: {
-                    collection: 'assignments',
-                    project: ['_id', 'title', 'dueDate', 'maxPoints'],
-                    relationships: [
-                      {
-                        name: 'submissions',
-                        from: 'submissions',
-                        localField: '_id',
-                        foreignField: 'assignmentId',
-                        spec: {
-                          collection: 'submissions',
-                          project: [
-                            '_id',
-                            'studentId',
-                            'fileUrl',
-                            'grade',
-                            'submissionDate',
-                            'comments.authorId',
-                            'comments.commentText',
-                          ],
-                          relationships: [
-                            {
-                              name: 'student',
-                              from: 'students',
-                              localField: 'studentId',
-                              foreignField: '_id',
-                              spec: {
-                                collection: 'student',
-                                project: ['_id', 'name', 'studentId', 'major', 'contacts.value']
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
+                  as: 'submissions',
+                  from: 'submissions',
+                  parentField: '_id',
+                  childField: 'assignmentId',
+                  project: [
+                    '_id',
+                    'studentId',
+                    'fileUrl',
+                    'grade',
+                    'submissionDate',
+                    'comments.authorId',
+                    'comments.commentText',
+                  ],
+                  relationships: [
+                    {
+                      as: 'student',
+                      from: 'students',
+                      parentField: 'studentId',
+                      childField: '_id',
+                      project: ['_id', 'name', 'studentId', 'major', 'contacts.value']
+                    }
+                  ]
                 }
               ]
             }
-          }
-        ]
-      }
+          ]
+        }
+      ]
     }
   ]
 };
