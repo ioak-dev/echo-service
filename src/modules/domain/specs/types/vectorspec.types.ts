@@ -34,7 +34,7 @@ interface RAGDataSchema {
 
 interface RAGChunk {
     text: string;
-    hash: string;
+    hash?: string;
     metadata: RAGChunkMetadata;
 }
 

@@ -68,6 +68,6 @@ module.exports = function (router: any) {
 
   router.post("/resources-ai/:space/chat/:assistantId", authorizeApi, transformDomain, chat);
 
-  router.post("/resources-ai/:space/rag/:id", authorizeApi, transformDomain, ragTest);
+  router.post("/resources-ai/:space/rag/:id", transformDomain, ragTest);
 
 }

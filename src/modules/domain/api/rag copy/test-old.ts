@@ -40,41 +40,41 @@ export const customerSupportSpec: RAGDataSchema = {
                 ]
             }
         ],
-        // embeddingTemplate: `
-        // ### Support Ticket Summary
+        embeddingTemplate: `
+        ### Support Ticket Summary
         
-        // Ticket Reference: {{reference}}
-        // Status: {{status}}
-        // Issue: {{issue}}
-        // Created On: {{created_at}}
+        Ticket Reference: {{reference}}
+        Status: {{status}}
+        Issue: {{issue}}
+        Created On: {{created_at}}
         
-        // {{#if __relatedData.customers}}
-        // {{#each __relatedData.customers}}
-        // ### Customer Information
-        // Name: {{name}}
-        // Email: {{email}}
-        // {{/each}}
-        // {{/if}}
+        {{#if __relatedData.customers}}
+        {{#each __relatedData.customers}}
+        ### Customer Information
+        Name: {{name}}
+        Email: {{email}}
+        {{/each}}
+        {{/if}}
 
-        // {{#if __relatedData.orders}}
-        // ### Orders
-        // {{#each __relatedData.orders}}
-        // - Order Reference: {{reference}}
-        //   - Order Date: {{order_date}}
-        //   - Order Status: {{status}}
+        {{#if __relatedData.orders}}
+        ### Orders
+        {{#each __relatedData.orders}}
+        - Order Reference: {{reference}}
+          - Order Date: {{order_date}}
+          - Order Status: {{status}}
         
-        //   {{#if __relatedData.order_items}}
-        //   #### Order Items
-        //   {{#each __relatedData.order_items}}
-        //   - Product: {{#if __relatedData.products}}{{#each __relatedData.products}}{{name}}{{/each}}{{else}}ID {{product_id}}{{/if}}
-        //     - Quantity: {{quantity}}
-        //     - Price: {{price}}
-        //     - Obj: {{object.fieldone}}
-        //   {{/each}}
-        //   {{/if}}
-        // {{/each}}
-        // {{/if}}
-        // `
+          {{#if __relatedData.order_items}}
+          #### Order Items
+          {{#each __relatedData.order_items}}
+          - Product: {{#if __relatedData.products}}{{#each __relatedData.products}}{{name}}{{/each}}{{else}}ID {{product_id}}{{/if}}
+            - Quantity: {{quantity}}
+            - Price: {{price}}
+            - Obj: {{object.fieldone}}
+          {{/each}}
+          {{/if}}
+        {{/each}}
+        {{/if}}
+        `
     },
     globalSettings: {
         chunkSeparator: "\n",
