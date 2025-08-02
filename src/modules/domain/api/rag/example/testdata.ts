@@ -2,7 +2,7 @@
 
 import { MongoClient, ObjectId } from 'mongodb';
 import { faker } from '@faker-js/faker';
-import { getCollectionByName } from '../../../../lib/dbutils';
+import { getCollectionByName } from '../../../../../lib/dbutils';
 
 export const seedDatabase = async (space: string) => {
     console.log('Starting university database seeding...');

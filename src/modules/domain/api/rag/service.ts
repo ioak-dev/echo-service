@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { seedDatabase } from "./testdata";
+import { seedDatabase } from "./example/testdata";
 import { buildAllDataTrees, buildDataTree } from "./main";
-import { universityDataTreeSpec } from "./spec";
+import { universityDataTreeSpec } from "./example/example";
 
 export const ragTest = async (req: Request, res: Response) => {
     const { space } = req.params;

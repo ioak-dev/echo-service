@@ -1,4 +1,4 @@
-import { DataTreeSpec } from "./types";
+import { DataTreeSpec } from "../types";
 
 export const universityDataTreeSpec: DataTreeSpec = {
   from: 'students',
