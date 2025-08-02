@@ -14,8 +14,6 @@ const buildProjection = (fields: string[]): Record<string, 1 | 0> => {
     return projection;
 };
 
-
-
 export const buildDataTree = async (
     realm: string,
     spec: DataTreeSpec,
