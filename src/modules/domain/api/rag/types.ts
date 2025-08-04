@@ -6,6 +6,17 @@ export interface DataTreeSpec {
 
 export interface ChildDataTreeSpec extends DataTreeSpec {
   as?: string; // alias
-  parentField: string; // field in parent
-  childField: string; // field in child
+  parentField: string;
+  childField: string;
+}
+
+export interface ChunkSpec {
+  subjectPath: string; // e.g., "sections.*.paragraphs.*"
+  embeddingTemplate: string; // A single Handlebars template that can access the pruned context
+  metadata?: Record<string, unknown>;
+}
+
+export interface Chunk {
+  text: string;
+  metadata: Record<string, unknown>;
 }

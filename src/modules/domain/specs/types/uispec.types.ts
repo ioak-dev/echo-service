@@ -20,13 +20,9 @@ export interface FieldOption {
 }
 
 export interface FieldValidation {
-    required?: { condition: boolean, message?: string };
-    minLength?: { condition: number, message?: string };
-    maxLength?: { condition: number, message?: string };
-    pattern?: { condition: string, message?: string };
-    min?: { condition: number, message?: string };
-    max?: { condition: number, message?: string };
-    customValidator?: (value: any) => string | null;
+    type: "required" | "min" | "max" | "pattern";
+    messageTemplate?: string; // handlebar template
+    expected?: number | string; // number for min or max, string for pattern type
 }
 
 export interface FormFieldSchema {
@@ -38,7 +34,7 @@ export interface FormFieldSchema {
     placeholder?: string;
     defaultValue?: any;
     options?: { label: string, value: string | number }[];
-    validation?: FieldValidation;
+    validation?: FieldValidation[];
     multiple?: boolean;
 
     visibleIf?: {

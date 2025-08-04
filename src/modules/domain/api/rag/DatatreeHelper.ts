@@ -22,7 +22,7 @@ export const buildDataTree = async (
     const rootCollection = getCollectionByName(realm, spec.from);
 
     const pipeline = buildPipeline(spec, rootId);
-    console.log(JSON.stringify(pipeline, null, 2));
+    // console.log(JSON.stringify(pipeline, null, 2));
     const result = await rootCollection.aggregate(pipeline).exec();
     return result[0]; // assuming rootId is unique
 };

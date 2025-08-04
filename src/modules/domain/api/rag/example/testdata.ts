@@ -101,7 +101,7 @@ export const seedDatabase = async (space: string) => {
 
     // --- 4. Populate Enrollments (many-to-many link) ---
     const enrollments = [];
-    const enrollmentsToCreate = 100;
+    const enrollmentsToCreate = 2;
     for (let i = 0; i < enrollmentsToCreate; i++) {
         enrollments.push({
             _id: new ObjectId(),
