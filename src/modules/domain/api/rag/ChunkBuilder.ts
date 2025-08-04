@@ -1,7 +1,6 @@
 import Handlebars from 'handlebars';
 import { Chunk, ChunkSpec } from './types';
 
-// Recursive type for safe JSON-like values
 export type JSONValue = string | number | boolean | null | undefined | JSONValue[] | { [key: string]: JSONValue };
 
 interface SubjectMatch {
@@ -44,14 +43,10 @@ const buildUnifiedRenderContext = (dataTree: JSONValue, subjectPath: string): Re
 };
 
 const renderTemplate = (template: string, context: Record<string, unknown>): string => {
-  console.log(context.tree.students.enrollments.course)
+  // console.log(context.tree.students.enrollments.course)
   const compiled = Handlebars.compile(template);
   return compiled(context);
 };
-
-// ----------------------
-// PATH + TRAVERSAL UTILSF
-// ----------------------
 
 const resolveWildcardPaths = (tree: JSONValue, path: string): string[] => {
   const segments = path.split('.');
@@ -86,14 +81,6 @@ const getNodeByPath = (tree: JSONValue, path: string): JSONValue => {
   }, tree);
 };
 
-// ----------------------
-// EXTRACTED HELPER
-// ----------------------
-
-/**
- * Builds a scoped tree from a path within a larger tree,
- * resolving just enough of the path to provide context.
- */
 const buildScopedTree = (node: JSONValue, segments: string[]): JSONValue => {
   if (segments.length === 0) return node;
 
@@ -102,6 +89,7 @@ const buildScopedTree = (node: JSONValue, segments: string[]): JSONValue => {
   if (Array.isArray(node)) {
     const index = parseInt(current, 10);
     if (isNaN(index) || index < 0 || index >= node.length) return undefined;
+    console.log(rest);
     return buildScopedTree(node[index], rest); // collapse array
   }
 
