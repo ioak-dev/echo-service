@@ -4,7 +4,7 @@ import { Chunk, ChunkSpec } from './types';
 export type JSONValue = string | number | boolean | null | undefined | JSONValue[] | { [key: string]: JSONValue };
 
 interface SubjectMatch {
-  node: unknown;
+  node: JSONValue;
   fullPath: string;
 }
 
@@ -30,20 +30,17 @@ const extractSubjectNodesWithPaths = (dataTree: JSONValue, subjectPath: string):
   }));
 };
 
-const buildUnifiedRenderContext = (dataTree: JSONValue, subjectPath: string): Record<string, unknown> => {
+const buildUnifiedRenderContext = (dataTree: JSONValue, subjectPath: string): JSONValue => {
   const pathSegments = subjectPath.split('.');
   const scopedTree = buildScopedTree(dataTree, pathSegments);
-  const subject = getNodeByPath(dataTree, subjectPath);
-
-  return {
-    tree: scopedTree,
-    subject,
-    subjectPath,
-  };
+  // const subject = getNodeByPath(dataTree, subjectPath);
+  return scopedTree;
 };
 
-const renderTemplate = (template: string, context: Record<string, unknown>): string => {
-  // console.log(context.tree.students.enrollments.course)
+const renderTemplate = (template: string, context: JSONValue): string => {
+  if (typeof context !== 'object' || context === null) {
+    throw new Error('Template context must be an object');
+  }
   const compiled = Handlebars.compile(template);
   return compiled(context);
 };
@@ -89,7 +86,6 @@ const buildScopedTree = (node: JSONValue, segments: string[]): JSONValue => {
   if (Array.isArray(node)) {
     const index = parseInt(current, 10);
     if (isNaN(index) || index < 0 || index >= node.length) return undefined;
-    console.log(rest);
     return buildScopedTree(node[index], rest); // collapse array
   }
 

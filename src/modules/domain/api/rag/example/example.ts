@@ -108,7 +108,7 @@ export const universityChunkSpecs: ChunkSpec[] = [
   // },
   {
     subjectPath: 'students.*.enrollments.*.course.*.assignments.*',
-    embeddingTemplate: 'Assignment "{{tree.students.enrollments.course.assignments.title}}"',
+    embeddingTemplate: 'Assignment "{{students.enrollments.course.assignments.title}}"',
     metadata: { type: 'assignment' }
   },
   // {
