@@ -1,13 +1,10 @@
-// seed-university.ts
-
-import { MongoClient, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { faker } from '@faker-js/faker';
 import { getCollectionByName } from '../../../../../lib/dbutils';
 
 export const seedDatabase = async (space: string) => {
     console.log('Starting university database seeding...');
 
-    // Clear existing collections
     const db = {
         users: getCollectionByName(space, "users"),
         students: getCollectionByName(space, "students"),
@@ -144,12 +141,12 @@ export const seedDatabase = async (space: string) => {
                 }
                 submissions.push({
                     _id: submissionId,
-                    assignmentId: assignmentId, // Lookup relationship
-                    studentId: enrollment.studentId, // Lookup relationship
+                    assignmentId: assignmentId,
+                    studentId: enrollment.studentId,
                     fileUrl: faker.internet.url(),
                     grade: faker.number.int({ min: 0, max: 100 }),
                     submissionDate: faker.date.recent({ days: 14 }),
-                    comments: comments, // Embedded relationship
+                    comments: comments,
                 });
             }
         }
