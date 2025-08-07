@@ -5,6 +5,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
   project: ['_id', 'name', 'studentId', 'major', 'createdAt'],
   relationships: [
     {
+      type: "lookup",
       as: 'enrollments',
       from: 'enrollments',
       parentField: '_id',
@@ -12,6 +13,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
       project: ['_id', 'courseId', 'enrolledAt', 'studentId'],
       relationships: [
         {
+          type: "lookup",
           as: 'course',
           from: 'courses',
           parentField: 'courseId',
@@ -19,6 +21,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
           project: ['_id', 'title', 'code', 'credits', 'instructorId', 'createdAt'],
           relationships: [
             {
+              type: "lookup",
               as: 'instructor',
               from: 'users',
               parentField: 'instructorId',
@@ -26,6 +29,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
               project: ['_id', 'name', 'email', 'role']
             },
             {
+              type: "lookup",
               as: 'assignments',
               from: 'assignments',
               parentField: '_id',
@@ -33,6 +37,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
               project: ['_id', 'title', 'dueDate', 'maxPoints'],
               relationships: [
                 {
+                  type: "lookup",
                   as: 'submissions',
                   from: 'submissions',
                   parentField: '_id',
@@ -48,11 +53,22 @@ export const universityDataTreeSpec: DataTreeSpec = {
                   ],
                   relationships: [
                     {
+                      type: "lookup",
                       as: 'student',
                       from: 'students',
                       parentField: 'studentId',
                       childField: '_id',
                       project: ['_id', 'name', 'studentId', 'major', 'contacts.value']
+                    },
+                    {
+                      from: "",
+                      as: "neverUsed",
+                      parentField: 'comments.authorId',
+                      childField: '_id',
+                      type: "embed",
+                      embedFieldMap: {
+                        "name": 'author.name'
+                      }
                     }
                   ]
                 }
@@ -106,11 +122,16 @@ export const universityChunkSpecs: ChunkSpec[] = [
   //   parentContextTemplate: 'Course title: {{ancestors.[0].title}}',
   //   metadata: { type: 'instructor' }
   // },
+  // {
+  //   subjectPath: 'students.*.enrollments.*.course.*.assignments.*',
+  //   embeddingTemplate: 'Assignment "{{students.enrollments.course.assignments.title}}"',
+  //   metadata: { type: 'assignment' }
+  // },
   {
-    subjectPath: 'students.*.enrollments.*.course.*.assignments.*',
-    embeddingTemplate: 'Assignment "{{students.enrollments.course.assignments.title}}"',
-    metadata: { type: 'assignment' }
-  },
+    subjectPath: "students.*.enrollments.*.course.*.assignments.*.submissions.*.comments.*",
+    embeddingTemplate: "Comment on assignment '{{students.enrollments.course.assignments.title}}' by author {{students.enrollments.course.assignments.submissions.comments.author.name}}: {{students.enrollments.course.assignments.submissions.comments.commentText}}",
+    metadata: { type: "comment" }
+  }
   // {
   //   subjectPath: 'students.*.enrollments.*.course.assignments.*.submissions.*',
   //   subjectTemplate: 'Submission by student ID {{this.studentId}} on {{this.submissionDate}}. Grade: {{this.grade}}.',
