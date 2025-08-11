@@ -116,18 +116,11 @@ export const runGeneration = async (params: {
   const prompt = PromptUtils.replacePlaceholders(params.spec.prompt, contextData);
   const chatgptPrompt = PromptBuilder.adapters.chatgpt.convert(prompt);
 
-  // const llmOutput = await LlmRunner.runner.chatgpt.predict(
-  //   config.CHATGPT_API_KEY,
-  //   "/v1/chat/completions",
-  //   chatgptPrompt,
-  //   "object"
-  // );
-
   const llmOutput = await AihubService.predict(params.space, params.token, {
     uri: "/v1/chat/completions",
     provider: "chatgpt",
-    model: "gpt-4o-mini",
-    payload: chatgptPrompt,
+    model: "gpt-5-nano",
+    payload: {...chatgptPrompt, reasoning_effort: "minimal"},
     format: "object",
   });
 

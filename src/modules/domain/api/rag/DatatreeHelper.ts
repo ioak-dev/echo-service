@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { DataTreeSpec, EmbedChildDataTreeSpec } from './types';
+import { DataTreeSpec, EmbedChildDataTreeSpec } from '../../specs/types/vectorspec.types';
 import { getCollectionByName } from '../../../../lib/dbutils';
 
 const buildProjection = (fields: string[]): Record<string, 1 | 0> => {

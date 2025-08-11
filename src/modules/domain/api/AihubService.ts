@@ -37,7 +37,7 @@ export async function predict(tenant: string, token: string, {
     payload,
     format = "string",
 }: PredictInput): Promise<PredictionResponse> {
-    const endpoint = `${config.AIHUB_URL}/${config.AIHUB_CLIENT}/${tenant}/predict`;
+    const endpoint = `${config.AIHUB_URL}/v1/predict/${config.AIHUB_CLIENT}/${tenant}`;
 
     try {
         const response: AxiosResponse<PredictionResponse> = await axios.post(
@@ -98,7 +98,7 @@ export const predictStream = async (tenant: string, token: string, {
         api_key: config.CHATGPT_API_KEY,
         payload: {
             messages,
-            "temperature": 0.7
+            "temperature": 1
         },
     };
 

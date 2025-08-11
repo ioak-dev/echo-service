@@ -1,5 +1,5 @@
 import Handlebars from 'handlebars';
-import { Chunk, ChunkSpec } from './types';
+import { Chunk, ChunkSpec } from '../../specs/types/vectorspec.types';
 
 export type JSONValue = string | number | boolean | null | undefined | JSONValue[] | { [key: string]: JSONValue };
 

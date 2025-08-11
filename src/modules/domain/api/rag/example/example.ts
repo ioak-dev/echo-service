@@ -1,4 +1,4 @@
-import { ChunkSpec, DataTreeSpec } from "../types";
+import { ChunkSpec, DataTreeSpec } from '../../../specs/types/vectorspec.types';
 
 export const universityDataTreeSpec: DataTreeSpec = {
   from: 'students',
@@ -127,6 +127,7 @@ export const universityChunkSpecs: ChunkSpec[] = [
   //   metadata: { type: 'assignment' }
   // },
   {
+    ragName: "comments",
     subjectPath: "students.*.enrollments.*.course.*.assignments.*.submissions.*.comments.*",
     embeddingTemplate: "Comment on assignment '{{students.enrollments.course.assignments.title}}' by author {{students.enrollments.course.assignments.submissions.comments.author.name}}: {{students.enrollments.course.assignments.submissions.comments.commentText}}",
     metadata: { type: "comment", authorOfComment: "{{students.enrollments.course.assignments.submissions.comments.authorId}}" }
