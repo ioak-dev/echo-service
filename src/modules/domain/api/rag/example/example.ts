@@ -61,8 +61,7 @@ export const universityDataTreeSpec: DataTreeSpec = {
                       project: ['_id', 'name', 'studentId', 'major', 'contacts.value']
                     },
                     {
-                      from: "",
-                      as: "neverUsed",
+                      from: 'users',
                       parentField: 'comments.authorId',
                       childField: '_id',
                       type: "embed",
