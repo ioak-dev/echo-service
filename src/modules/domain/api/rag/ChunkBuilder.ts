@@ -8,16 +8,27 @@ interface SubjectMatch {
   fullPath: string;
 }
 
+const resolveMetadata = (
+  metadata: Record<string, unknown> | undefined,
+  context: JSONValue
+) =>
+  Object.fromEntries(
+    Object.entries(metadata ?? {}).map(([key, value]) => [
+      key,
+      typeof value === "string"
+        ? renderTemplate(value, context).trim()
+        : value
+    ])
+  );
+
 export const generateChunks = (dataTree: JSONValue, chunkSpecs: ChunkSpec[]): Chunk[] => {
   return chunkSpecs.flatMap(spec => {
     const matches = extractSubjectNodesWithPaths(dataTree, spec.subjectPath);
     return matches.map(match => {
       const context = buildUnifiedRenderContext(dataTree, match.fullPath);
       const text = renderTemplate(spec.embeddingTemplate, context);
-      return {
-        text,
-        metadata: spec.metadata || {},
-      };
+      const metadata = resolveMetadata(spec.metadata, context);
+      return { text, metadata };
     });
   });
 };

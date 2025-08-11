@@ -129,7 +129,7 @@ export const universityChunkSpecs: ChunkSpec[] = [
   {
     subjectPath: "students.*.enrollments.*.course.*.assignments.*.submissions.*.comments.*",
     embeddingTemplate: "Comment on assignment '{{students.enrollments.course.assignments.title}}' by author {{students.enrollments.course.assignments.submissions.comments.author.name}}: {{students.enrollments.course.assignments.submissions.comments.commentText}}",
-    metadata: { type: "comment" }
+    metadata: { type: "comment", authorOfComment: "{{students.enrollments.course.assignments.submissions.comments.authorId}}" }
   }
   // {
   //   subjectPath: 'students.*.enrollments.*.course.assignments.*.submissions.*',
